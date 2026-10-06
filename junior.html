@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>光為什麼會變慢（國中版）</title>
+<style>
+  :root {
+    --primary: #1565C0; --accent: #E65100; --bg: #F5F7FA; --card: #FFFFFF;
+    --blue: #1E88E5; --red: #D84315; --green: #2E7D32; --orange: #EF6C00; --gold: #F9A825;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: #1a1c1f; line-height: 1.7;
+    font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif; }
+  header { background: var(--primary); color: #fff; padding: 10px 16px; display: flex; gap: 12px;
+    align-items: center; flex-wrap: wrap; position: sticky; top: 0; z-index: 10; }
+  header h1 { font-size: 18px; margin: 0; white-space: nowrap; }
+  .tabs { display: flex; gap: 6px; overflow-x: auto; max-width: 100%; }
+  .tabs button { border: none; border-radius: 6px; padding: 6px 12px; font-size: 15px; cursor: pointer;
+    background: rgba(255,255,255,.2); color: #fff; white-space: nowrap; }
+  .tabs button.active { background: #fff; color: var(--primary); font-weight: bold; }
+  main { padding: 16px; max-width: 1000px; margin: 0 auto; }
+  .panel { display: none; } .panel.active { display: block; }
+  .card { background: var(--card); border-radius: 10px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.12); margin-bottom: 16px; }
+  h2 { font-size: 21px; margin: 0 0 6px; } h3 { font-size: 17px; margin: 0 0 6px; }
+  .big { font-size: 17px; }
+  .key { background: #FFF3E0; border-left: 5px solid var(--accent); padding: 8px 12px; border-radius: 6px; font-size: 16px; margin: 10px 0; }
+  canvas { display: block; width: 100%; border-radius: 8px; background: #fff; touch-action: none; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; margin: 10px 0; }
+  .controls label { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+  .controls input[type=range] { width: 170px; }
+  .controls output { min-width: 3.5em; font-weight: bold; font-variant-numeric: tabular-nums; }
+  .readout { background: #EEF3FA; border-radius: 8px; padding: 8px 12px; font-size: 16px; min-height: 2.4em; }
+  .seg { display: inline-flex; border: 1px solid #B0BEC5; border-radius: 8px; overflow: hidden; }
+  .seg button { border: none; background: #fff; padding: 7px 11px; font-size: 14px; cursor: pointer; }
+  .seg button.on { background: var(--primary); color: #fff; }
+  .btn { border: none; border-radius: 8px; padding: 8px 14px; font-size: 15px; background: var(--primary); color: #fff; cursor: pointer; }
+  .btn.secondary { background: #607D8B; }
+  .guess { border: 2px dashed var(--accent); border-radius: 8px; padding: 8px 12px; margin: 8px 0; font-size: 16px; }
+  details { margin-top: 10px; } summary { cursor: pointer; font-weight: bold; color: var(--primary); }
+  details.teacher summary { color: #6D4C41; }
+  .note { font-size: 13px; color: #546E7A; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+  .steps button { text-align: left; border: 1px solid #CFD8DC; border-radius: 10px; background: #fff; padding: 10px 12px; cursor: pointer; font-size: 15px; }
+  .steps button b { display: block; font-size: 16px; color: var(--primary); }
+  .sheet ol { padding-left: 22px; } .sheet li { margin-bottom: 18px; font-size: 16px; }
+  .sheet .line { border-bottom: 1px solid #90A4AE; height: 30px; }
+  @media (max-width: 720px) { .controls input[type=range] { width: 130px; } }
+  @media print {
+    header, .no-print, .panel:not(#panel-sheet) { display: none !important; }
+    #panel-sheet { display: block !important; }
+    body { background: #fff; } .card { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>💡 光為什麼會變慢？</h1>
+  <nav class="tabs">
+    <button class="active" data-tab="intro">開始</button>
+    <button data-tab="s1">① 波浪舞</button>
+    <button data-tab="s2">② 為什麼會晚</button>
+    <button data-tab="s3">③ 能量口袋</button>
+    <button data-tab="s4">④ 行軍轉彎</button>
+    <button data-tab="sheet">說說看（學習單）</button>
+  </nav>
+</header>
+
+<main>
+<!-- ================= 開始 ================= -->
+<section class="panel active" id="panel-intro">
+  <div class="card">
+    <h2>光從空氣進入玻璃，會變慢、會轉彎。為什麼？</h2>
+    <p class="big">玻璃裡面有很多很多原子，原子裡有電子。光一照進來，電子就會<b>跟著光一起晃</b>。</p>
+    <p class="big">這四個小模擬，每一個只講一件事：</p>
+    <div class="steps">
+      <button data-go="s1"><b>① 波浪舞</b>「光變慢」到底是什麼在變慢？</button>
+      <button data-go="s2"><b>② 為什麼會晚</b>電子加上的小波，讓波峰晚一點</button>
+      <button data-go="s3"><b>③ 能量口袋</b>能量為什麼也變慢？</button>
+      <button data-go="s4"><b>④ 行軍轉彎</b>變慢了，為什麼會轉彎？</button>
+    </div>
+    <p class="note" style="margin-top:12px">這是簡化版。想看完整的物理模擬，請看<a href="index.html">進階版：偶極與折射</a>。</p>
+  </div>
+</section>
+
+<!-- ================= ① 波浪舞 ================= -->
+<section class="panel" id="panel-s1">
+  <div class="card">
+    <h2>① 波浪舞：是什麼在變慢？</h2>
+    <div class="guess">🤔 <b>先猜：</b>體育場的觀眾做波浪舞時，有人往旁邊跑嗎？那「波浪」為什麼會往前跑？</div>
+    <canvas id="c1"></canvas>
+    <div class="controls">
+      <label>玻璃裡，每個人比旁邊的人多等幾倍時間<input type="range" id="n1" min="1" max="2" step="0.05" value="1.5"><output id="n1o"></output></label>
+      <button class="btn secondary pausebtn">⏸ 暫停</button>
+    </div>
+    <div class="readout" id="r1"></div>
+    <div class="key">每個人都只是<b>站起來、蹲下去</b>，沒有人往前跑。<br>往前跑的是「波浪」這個<b>花樣</b>。只要每個人站起來的時間比旁邊的人晚一點點，波浪就會往前傳。<br>在玻璃裡每個人<b>晚得更多</b>，波浪就跑得<b>比較慢</b>，波峰也擠得<b>比較近</b>。</div>
+    <details class="teacher"><summary>老師的話：比喻哪裡不完全準確</summary>
+      <p>光的「人」是每個位置的電場，它的上下動代表電場來回翻轉。波浪的速度叫<b>相速度</b>，在玻璃中約為 c/n。</p>
+      <p>真實的光在真空中不需要「人」也能傳，這裡只是用人來表示每個位置的電場。至於「玻璃裡為什麼每個人晚得更多」，答案在 ②。</p>
+    </details>
+  </div>
+</section>
+
+<!-- ================= ② 為什麼會晚 ================= -->
+<section class="panel" id="panel-s2">
+  <div class="card">
+    <h2>② 為什麼玻璃裡會「晚一點」？</h2>
+    <div class="guess">🤔 <b>先猜：</b>一個大波，加上一個比它<b>晚一點點</b>的小波，合起來的波峰會在哪裡？</div>
+    <canvas id="c2"></canvas>
+    <div class="controls">
+      <label>小波晚幾拍<input type="range" id="q2" min="0" max="0.5" step="0.05" value="0.25"><output id="q2o"></output></label>
+      <label>小波大小<input type="range" id="a2" min="0" max="0.5" step="0.05" value="0.3"><output id="a2o"></output></label>
+      <button class="btn secondary pausebtn">⏸ 暫停</button>
+    </div>
+    <div class="readout" id="r2"></div>
+    <div class="key">玻璃裡的電子跟著光晃，自己也會發出一個<b>小波</b>。從整片原子傳過來的小波，比原本的光<b>晚 1/4 拍</b>。<br>大波＋晚一點的小波＝<b>波峰往後退一點</b>。<br>光每穿過一層原子，就被加上一個這樣的小波，於是一層一層<b>越來越晚</b>：這就是 ① 裡「每個人等更久」的原因。</div>
+    <details class="teacher"><summary>老師的話：比喻哪裡不完全準確</summary>
+      <p>小波的大小被放大了很多倍，才看得見。真實的一層原子，小波非常非常小，但玻璃有幾百萬層。</p>
+      <p>「晚 1/4 拍」是因為整片原子中，離得比較遠的原子，小波要走比較長的路才到，加起來的總和剛好晚 1/4 拍（進階版第 3 階）。</p>
+      <p>把「小波晚幾拍」拉到 0.5：小波和大波反著走，合起來變小。這就是光被<b>吸收</b>的情況，發生在光的頻率剛好碰到電子最喜歡的晃動節奏時。</p>
+    </details>
+  </div>
+</section>
+
+<!-- ================= ③ 能量口袋 ================= -->
+<section class="panel" id="panel-s3">
+  <div class="card">
+    <h2>③ 能量口袋：能量為什麼也變慢？</h2>
+    <div class="guess">🤔 <b>先猜：</b>電子每一拍都會從光那裡接過一點能量，同一拍就還回去。這樣能量還會變慢嗎？</div>
+    <canvas id="c3"></canvas>
+    <div class="controls">
+      <span class="seg" id="seg3"><button data-v="right" class="on">正確：每一拍收、每一拍還</button><button data-v="wrong">錯誤想法：吸收很久再亂丟</button></span>
+      <label>每一拍裡，能量待在電子身上的時間<input type="range" id="f3" min="0" max="0.6" step="0.02" value="0.38"><output id="f3o"></output></label>
+      <button class="btn" id="re3">↺ 重新開始</button>
+    </div>
+    <div class="readout" id="r3"></div>
+    <div class="key">黃色小方塊是能量。在玻璃裡，每一拍都有一小段時間，能量被電子「拿在手上」（變紅色），同一拍就交回去，繼續往前。<br>停一下、走一下、停一下、走一下……平均起來就<b>變慢</b>了。<br>重點是：大家<b>一起</b>停、<b>一起</b>走，而且都<b>往前</b>，所以光還是筆直地穿過去。</div>
+    <details class="teacher"><summary>老師的話：比喻哪裡不完全準確</summary>
+      <p>真實情況是：任何時刻，玻璃裡的能量有一部分在電場、一部分在電子的晃動（進階版第 7 階算出約三到四成在電子身上）。這裡用「每拍停一小段」來表示「平均有一部分能量沒在往前跑」。這叫<b>群速度</b>變慢。</p>
+      <p>切到「錯誤想法」：如果電子吸收能量後過很久才放出，放出的方向是隨機的，光會四處亂散，玻璃就會像毛玻璃一樣霧霧的。這和真實的透明玻璃不符。</p>
+    </details>
+  </div>
+</section>
+
+<!-- ================= ④ 行軍轉彎 ================= -->
+<section class="panel" id="panel-s4">
+  <div class="card">
+    <h2>④ 行軍轉彎：變慢了，為什麼會轉彎？</h2>
+    <div class="guess">🤔 <b>先猜：</b>一排同學手牽手，斜斜地從水泥地走進泥巴地（走不快）。誰先變慢？隊伍會怎樣？</div>
+    <canvas id="c4"></canvas>
+    <div class="controls">
+      <label>斜走的角度<input type="range" id="t4" min="0" max="60" step="1" value="40"><output id="t4o"></output></label>
+      <label>泥巴地慢幾倍<input type="range" id="n4" min="1" max="2" step="0.05" value="1.5"><output id="n4o"></output></label>
+      <span class="seg" id="seg4"><button data-v="keep" class="on">保持隊形（手牽手、面向前方）</button><button data-v="stubborn">堅持原方向</button></span>
+    </div>
+    <div class="readout" id="r4"></div>
+    <div class="key">斜斜走進去的時候，<b>先踩進泥巴的人先變慢</b>，還在水泥地的人照樣快走。<br>隊伍要保持手牽手、面向前方，整排就只能<b>轉向</b>，而且是轉得比較靠近「直直走進去」的方向（偏向法線）。<br>光的「隊伍」就是波峰那一排。</div>
+    <details class="teacher"><summary>老師的話：比喻哪裡不完全準確</summary>
+      <p>同學會「決定」要保持隊形，光不會做決定。光的轉彎是因為每個位置的波都跟旁邊的波連在一起，波峰只能連成一條線，自然就轉向了（進階版第 5 階用小波加總證明）。</p>
+      <p>切到「堅持原方向」：大家照原方向走，只是變慢，結果隊伍不再面向前進的方向，被扯歪了。</p>
+      <p>角度設成 0（直直走進去）：大家同時變慢，不轉彎。泥巴地設成 1 倍：不變慢，也不轉彎。</p>
+    </details>
+  </div>
+</section>
+
+<!-- ================= 學習單 ================= -->
+<section class="panel" id="panel-sheet">
+  <div class="card sheet">
+    <h2>說說看：光為什麼會變慢、會轉彎？</h2>
+    <p>班級＿＿＿　座號＿＿＿　姓名＿＿＿＿＿＿</p>
+    <ol>
+      <li>（波浪舞）做波浪舞時，有人往前跑嗎？那往前跑的是什麼？<div class="line"></div><div class="line"></div></li>
+      <li>（為什麼會晚）一個大波加上一個晚一點的小波，合起來的波峰會往前還是往後？這和光在玻璃中變慢有什麼關係？<div class="line"></div><div class="line"></div></li>
+      <li>（能量口袋）電子每一拍收能量、同一拍就還回去，為什麼光的能量還是會變慢？<div class="line"></div><div class="line"></div></li>
+      <li>（能量口袋）如果電子是「吸收很久，再往隨便一個方向丟出去」，從玻璃看出去會變成什麼樣子？這和真實的玻璃一樣嗎？<div class="line"></div><div class="line"></div></li>
+      <li>（行軍轉彎）一排人斜斜走進泥巴地，為什麼隊伍會轉彎？如果直直走進去呢？<div class="line"></div><div class="line"></div></li>
+      <li>用一句話，把「電子跟著晃」、「小波」、「變慢」、「轉彎」串起來：<div class="line"></div><div class="line"></div></li>
+    </ol>
+    <p class="no-print"><button class="btn" onclick="window.print()">🖨 列印學習單</button></p>
+  </div>
+</section>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const TAU = Math.PI * 2, DEG = Math.PI / 180;
+let T = 0, clock = 0, paused = false, active = "intro";
+
+function fit(id, aspect, minH) {
+  const cv = document.getElementById(id), w = cv.clientWidth;
+  if (!w) return null;
+  const h = Math.max(minH || 0, Math.round(w * aspect)), dpr = window.devicePixelRatio || 1;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.height = h + "px";
+  }
+  const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+}
+function text(ctx, s, x, y, color = "#37474F", size = 14, align = "left") {
+  ctx.fillStyle = color; ctx.font = `${size}px "PingFang TC","Microsoft JhengHei",sans-serif`;
+  ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(s, x, y);
+}
+function tri(ctx, x, y, col) {
+  ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 6, y - 10); ctx.lineTo(x + 6, y - 10); ctx.closePath(); ctx.fill();
+}
+function plotWave(ctx, X0, X1, yMid, amp, f, color, lw, dash) {
+  ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = lw; if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); let first = true;
+  for (let X = X0; X <= X1 + 0.01; X += 2) { const y = yMid - amp * f(X); first ? ctx.moveTo(X, y) : ctx.lineTo(X, y); first = false; }
+  ctx.stroke(); ctx.restore();
+}
+
+/* ================= ① 波浪舞 =================
+   第 i 個人的動作：sin(ωt − φi)。空氣中相鄰兩人相差 D，玻璃中相差 D×n。 */
+const J1 = { n: 1.5 };
+function draw1() {
+  const c = fit("c1", 0.55, 300); if (!c) return;
+  const { ctx, w, h } = c; ctx.clearRect(0, 0, w, h);
+  const NP = 36, g0 = 15.5, D = 0.35, mx = 22, sp = (w - 2 * mx) / (NP - 1), rowH = h / 2, n = J1.n;
+  const xg = mx + g0 * sp;
+  ctx.fillStyle = "#E1F5FE"; ctx.fillRect(xg, rowH, w - xg, rowH);
+  ctx.strokeStyle = "#CFD8DC"; ctx.beginPath(); ctx.moveTo(0, rowH); ctx.lineTo(w, rowH); ctx.stroke();
+  text(ctx, "全部在空氣中（對照）", 8, 14, "#1E88E5", 14);
+  text(ctx, "空氣", 8, rowH + 14, "#1E88E5", 14);
+  text(ctx, "玻璃", xg + 8, rowH + 14, "#0277BD", 14);
+  const phi = (k, glass) => (!glass || k <= g0) ? D * k : D * g0 + D * n * (k - g0);
+  const kOf = (p, glass) => (!glass || p <= D * g0) ? p / D : g0 + (p - D * g0) / (D * n);
+  for (let r = 0; r < 2; r++) {
+    const glass = r === 1, base = rowH * r + rowH * 0.9, body = rowH * 0.28, A = rowH * 0.2;
+    for (let i = 0; i < NP; i++) {
+      const x = mx + i * sp, s = Math.sin(T - phi(i, glass)), hy = base - body - A * s;
+      const col = (i === 8 || i === 27) ? "#D84315" : "#455A64";
+      ctx.strokeStyle = col; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(x, base); ctx.lineTo(x, hy + 6); ctx.stroke();
+      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, hy, 5.5, 0, TAU); ctx.fill();
+    }
+    // 波峰旗子：sin 最大 ⇔ φ = T − π/2 − 2πm
+    const pmax = phi(NP - 1, glass);
+    for (let m = Math.floor((T - Math.PI / 2 - pmax) / TAU) - 1; m <= Math.ceil((T - Math.PI / 2) / TAU) + 1; m++) {
+      const p = T - Math.PI / 2 - TAU * m;
+      if (p < 0 || p > pmax) continue;
+      tri(ctx, mx + kOf(p, glass) * sp, base - body - A - 12, "#2E7D32");
+    }
+  }
+  $("#r1").innerHTML = `玻璃裡每個人多等 ${n.toFixed(2)} 倍 → 波浪在玻璃裡跑的速度變成空氣中的 <b>${(1 / n).toFixed(2)}</b> 倍，綠色旗子（波峰）的間距也變成 ${(1 / n).toFixed(2)} 倍。<br>紅色的人：一直待在原地，只有上下動。`;
+}
+
+/* ================= ② 為什麼會晚 ================= */
+const J2 = { q: 0.25, a: 0.3 };
+function draw2() {
+  const c = fit("c2", 0.62, 320); if (!c) return;
+  const { ctx, w, h } = c; ctx.clearRect(0, 0, w, h);
+  const rowH = h / 3, amp = rowH * 0.3, L = 3;   // 畫面寬 = 3 個波長
+  const Zx = (X) => X / w * L, ds = J2.q * TAU, a = J2.a;
+  const re = 1 + a * Math.cos(ds), im = a * Math.sin(ds), Delta = Math.atan2(im, re), R = Math.hypot(re, im);
+  for (let i = 1; i < 3; i++) { ctx.strokeStyle = "#ECEFF1"; ctx.beginPath(); ctx.moveTo(0, rowH * i); ctx.lineTo(w, rowH * i); ctx.stroke(); }
+  plotWave(ctx, 0, w, rowH * 0.55, amp, (X) => Math.cos(T - TAU * Zx(X)), "#1E88E5", 3);
+  text(ctx, "① 原本的光（大波）", 8, 12, "#1E88E5", 14);
+  plotWave(ctx, 0, w, rowH * 1.55, amp, (X) => a * Math.cos(T - TAU * Zx(X) - ds), "#EF6C00", 3);
+  text(ctx, "② 電子加上的小波", 8, rowH + 12, "#EF6C00", 14);
+  plotWave(ctx, 0, w, rowH * 2.55, amp, (X) => Math.cos(T - TAU * Zx(X)), "#90CAF9", 2, [5, 5]);
+  plotWave(ctx, 0, w, rowH * 2.55, amp, (X) => R * Math.cos(T - TAU * Zx(X) - Delta), "#2E7D32", 3.5);
+  text(ctx, "③ 合起來（虛線＝原本的位置）", 8, rowH * 2 + 12, "#2E7D32", 14);
+  const base = T / TAU;
+  for (let m = Math.floor(base - L) - 1; m <= Math.floor(base) + 1; m++) {
+    const zb = base - m, zg = (T - Delta) / TAU - m;
+    if (zb > 0 && zb < L) tri(ctx, zb / L * w, rowH * 2.55 - amp * 1.25, "#90CAF9");
+    if (zg > 0 && zg < L && R > 0.05) tri(ctx, zg / L * w, rowH * 2.55 - amp * R - 4, "#2E7D32");
+  }
+  let say;
+  if (a < 0.01) say = "沒有小波，什麼都沒變。";
+  else if (J2.q < 0.03) say = "小波和大波<b>同步</b>：合起來只是變大，波峰<b>沒有</b>往後退。";
+  else if (J2.q > 0.47) say = "小波和大波<b>反著走</b>：合起來<b>變小</b>了。這就是光被<b>吸收</b>的情況。";
+  else if (Math.abs(J2.q - 0.25) < 0.03) say = "小波晚 1/4 拍：大小幾乎不變，綠色波峰<b>往後退</b>了。這就是玻璃讓光變慢的原因！";
+  else say = "波峰往後退，同時大小也變了一點。";
+  $("#r2").innerHTML = `合起來的波峰往後退了 ${(Delta / TAU).toFixed(3)} 個波長。<br>${say}`;
+}
+
+/* ================= ③ 能量口袋 ================= */
+const J3 = { mode: "right", f: 0.38 };
+let toks = null, done3 = 0;
+function reset3() {
+  toks = [];
+  for (let lane = 0; lane < 2; lane++) for (let k = 0; k < 24; k++)
+    toks.push({ lane, x: 0.01 + Math.random() * 0.1, y: (Math.random() - 0.5) * 0.25, vx: 1, vy: 0, hold: 0, alive: true, out: false });
+  done3 = 0;
+}
+function draw3(dt) {
+  const c = fit("c3", 0.6, 300); if (!c) return;
+  const { ctx, w, h } = c; ctx.clearRect(0, 0, w, h);
+  if (!toks) reset3();
+  const laneH = h / 2, gx0 = 0.38, gx1 = 0.72, speed = 1 / 6;    // x 用 0~1 表示，6 秒跑完
+  const cols = 8, colX = (k) => gx0 + (k + 0.5) * (gx1 - gx0) / cols;
+  const beat = clock * 2;    // 每秒 2 拍
+  const holdNow = (beat % 1) < J3.f;
+  // 背景
+  ctx.fillStyle = "#E1F5FE"; ctx.fillRect(gx0 * w, laneH, (gx1 - gx0) * w, laneH);
+  ctx.strokeStyle = "#CFD8DC"; ctx.beginPath(); ctx.moveTo(0, laneH); ctx.lineTo(w, laneH); ctx.stroke();
+  text(ctx, "真空（對照）", 8, 14, "#1E88E5", 14);
+  text(ctx, "玻璃", gx0 * w + 8, laneH + 14, "#0277BD", 14);
+  // 電子（彈簧上的小球）
+  for (let k = 0; k < cols; k++) for (let r = -1; r <= 1; r++) {
+    const x = colX(k) * w, y0 = laneH * 1.5 + r * laneH * 0.25;
+    const dy = J3.mode === "right" ? 4 * Math.sin(beat * TAU) : 0;
+    ctx.strokeStyle = "#B0BEC5"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y0 - 10); ctx.lineTo(x, y0 + dy); ctx.stroke();
+    ctx.fillStyle = "#78909C"; ctx.beginPath(); ctx.arc(x, y0 + dy, 4, 0, TAU); ctx.fill();
+  }
+  // 更新能量方塊
+  if (!paused) for (const t of toks) {
+    if (!t.alive || t.out) continue;
+    if (t.lane === 0) { t.x += speed * dt; }
+    else if (J3.mode === "right") {
+      const inG = t.x >= gx0 && t.x <= gx1;
+      t.held = inG && holdNow;
+      if (!t.held) t.x += speed * dt;
+    } else {
+      if (t.hold > 0) { t.hold -= dt; t.held = true; if (t.hold <= 0) { const a = Math.random() * TAU; t.vx = Math.cos(a); t.vy = Math.sin(a); t.held = false; } }
+      else {
+        const nx = t.x + speed * dt * t.vx, ny = t.y + speed * dt * t.vy * (w / laneH);
+        for (let k = 0; k < cols; k++) {
+          const cx = colX(k);
+          if ((t.x - cx) * (nx - cx) < 0 && Math.random() < 0.6) { t.hold = 0.6 + Math.random() * 2; t.x = cx; t.held = true; break; }
+        }
+        if (!t.held) { t.x = nx; t.y = ny; }
+        if (Math.abs(t.y) > 0.5) t.alive = false;
+      }
+    }
+    if (t.x > 1) t.out = true;
+    if (t.x < 0) t.alive = false;
+  }
+  // 畫能量方塊與群體中心
+  const center = [[0, 0], [0, 0]];
+  for (const t of toks) {
+    if (!t.alive) continue;
+    const x = Math.min(t.x, 1) * w, y = laneH * (t.lane + 0.5) + t.y * laneH;
+    ctx.fillStyle = t.held ? "#D84315" : "#F9A825";
+    ctx.fillRect(x - 4, y - 4, 8, 8);
+    if (!t.out && !(J3.mode === "wrong" && t.lane === 1)) { center[t.lane][0] += t.x; center[t.lane][1]++; }
+  }
+  for (let l = 0; l < 2; l++) if (center[l][1]) tri(ctx, center[l][0] / center[l][1] * w, laneH * (l + 0.5) - laneH * 0.3, "#2E7D32");
+  // 統計
+  const glassT = toks.filter((t) => t.lane === 1), through = glassT.filter((t) => t.out && Math.abs(t.y) < 0.2).length;
+  const finished = toks.every((t) => !t.alive || t.out);
+  if (finished && !paused) { done3 += dt; if (done3 > 1.5) reset3(); }
+  let s;
+  if (J3.mode === "right") s = `能量在玻璃裡，每拍有 ${(J3.f * 100).toFixed(0)}% 的時間待在電子身上 → 平均速度變成真空的 <b>${(1 - J3.f).toFixed(2)}</b> 倍。直直穿過玻璃的能量：${through} / 24（光還是筆直的，玻璃是透明的）`;
+  else s = `直直穿過玻璃的能量只有 <b>${through} / 24</b>，其他被丟往四面八方 → 從玻璃後面看出去會<b>霧霧的</b>，但真實的玻璃是透明的。所以這個想法不對。`;
+  $("#r3").innerHTML = s;
+}
+
+/* ================= ④ 行軍轉彎 ================= */
+const J4 = { th: 40, n: 1.5, mode: "keep" };
+let t4 = 0;
+function draw4(dt) {
+  const c = fit("c4", 0.6, 300); if (!c) return;
+  const { ctx, w, h } = c; ctx.clearRect(0, 0, w, h);
+  if (!paused) t4 += dt;
+  const xb = w * 0.42, v1 = w / 7, v2 = v1 / J4.n, th1 = J4.th * DEG;
+  const th2 = Math.asin(Math.sin(th1) / J4.n);
+  const d1 = [Math.cos(th1), Math.sin(th1)], perp = [-Math.sin(th1), Math.cos(th1)];
+  const d2 = J4.mode === "keep" ? [Math.cos(th2), Math.sin(th2)] : d1;
+  const M = 9, sp = h * 0.055;
+  const c0 = [xb - 2.4 * v1 * d1[0], h * 0.45 - 2.4 * v1 * d1[1]];
+  if (t4 > 8) t4 = 0;
+  ctx.fillStyle = "#ECEFF1"; ctx.fillRect(0, 0, xb, h);
+  ctx.fillStyle = "#D7CCC8"; ctx.fillRect(xb, 0, w - xb, h);
+  text(ctx, "水泥地（走得快）", 8, 14, "#455A64", 14);
+  text(ctx, "泥巴地（走得慢）", xb + 8, 14, "#5D4037", 14);
+  ctx.save(); ctx.setLineDash([5, 5]); ctx.strokeStyle = "#546E7A";
+  ctx.beginPath(); ctx.moveTo(xb - 50, h * 0.45); ctx.lineTo(xb + 50, h * 0.45); ctx.stroke(); ctx.restore();
+  text(ctx, "法線", xb + 54, h * 0.45, "#546E7A", 12);
+  const posAt = (i, t) => {
+    const o = (i - (M - 1) / 2) * sp, p0 = [c0[0] + o * perp[0], c0[1] + o * perp[1]];
+    const ti = (xb - p0[0]) / (v1 * d1[0]);
+    if (t < ti) return [p0[0] + v1 * t * d1[0], p0[1] + v1 * t * d1[1]];
+    const b = [p0[0] + v1 * ti * d1[0], p0[1] + v1 * ti * d1[1]];
+    return [b[0] + v2 * (t - ti) * d2[0], b[1] + v2 * (t - ti) * d2[1]];
+  };
+  // 過去的隊伍位置（淡淡的）
+  for (let k = 0; k * 0.7 < t4; k++) {
+    const tt = k * 0.7; ctx.strokeStyle = "rgba(38,50,56,.38)"; ctx.lineWidth = 2; ctx.beginPath();
+    for (let i = 0; i < M; i++) { const p = posAt(i, tt); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
+    ctx.stroke();
+  }
+  // 現在的隊伍
+  const P = []; for (let i = 0; i < M; i++) P.push(posAt(i, t4));
+  ctx.strokeStyle = "#263238"; ctx.lineWidth = 3; ctx.beginPath();
+  P.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.stroke();
+  for (const p of P) {
+    const inMud = p[0] > xb, d = inMud ? d2 : d1;
+    ctx.fillStyle = inMud ? "#6D4C41" : "#1565C0"; ctx.beginPath(); ctx.arc(p[0], p[1], 7, 0, TAU); ctx.fill();
+    ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0] + d[0] * 18, p[1] + d[1] * 18); ctx.stroke();
+  }
+  $("#r4").innerHTML = J4.mode === "keep"
+    ? `斜走 ${J4.th}° 進去，在泥巴地裡變成 <b>${(th2 / DEG).toFixed(1)}°</b>（更靠近法線）。淡淡的線是隊伍走過的位置，看它在邊界轉彎。`
+    : `大家照原方向走、只是變慢：隊伍不再是一直線、也不再面向前進方向，被扯歪了。`;
+}
+
+/* ================= 控制項 ================= */
+function bindRange(id, fmt, set) {
+  const el = document.getElementById(id), out = document.getElementById(id + "o");
+  const upd = () => { set(+el.value); out.textContent = fmt(+el.value); };
+  el.addEventListener("input", upd); upd();
+}
+function bindSeg(id, set) {
+  const seg = document.getElementById(id);
+  seg.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    seg.querySelectorAll("button").forEach((x) => x.classList.remove("on")); b.classList.add("on"); set(b.dataset.v);
+  }));
+}
+bindRange("n1", (v) => v.toFixed(2) + " 倍", (v) => (J1.n = v));
+bindRange("q2", (v) => (v === 0 ? "0" : v === 0.25 ? "1/4" : v === 0.5 ? "1/2" : v.toFixed(2)) + " 拍", (v) => (J2.q = v));
+bindRange("a2", (v) => v.toFixed(2), (v) => (J2.a = v));
+bindRange("f3", (v) => Math.round(v * 100) + "%", (v) => (J3.f = v));
+bindSeg("seg3", (v) => { J3.mode = v; reset3(); });
+$("#re3").addEventListener("click", reset3);
+bindRange("t4", (v) => v + "°", (v) => { J4.th = v; t4 = 0; });
+bindRange("n4", (v) => v.toFixed(2) + " 倍", (v) => { J4.n = v; t4 = 0; });
+bindSeg("seg4", (v) => { J4.mode = v; t4 = 0; });
+document.querySelectorAll(".pausebtn").forEach((b) => b.addEventListener("click", () => {
+  paused = !paused; document.querySelectorAll(".pausebtn").forEach((x) => (x.textContent = paused ? "▶ 繼續" : "⏸ 暫停"));
+}));
+function go(tab) {
+  active = tab;
+  document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("active", x.dataset.tab === tab));
+  document.querySelectorAll(".panel").forEach((x) => x.classList.toggle("active", x.id === "panel-" + tab));
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => go(b.dataset.tab)));
+document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
+
+const DRAW = { s1: draw1, s2: draw2, s3: draw3, s4: draw4 };
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (!paused) { T += dt * Math.PI; clock += dt; }
+  const f = DRAW[active];
+  if (f) { try { f(paused ? 0 : dt); } catch (e) { console.error(e); } }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

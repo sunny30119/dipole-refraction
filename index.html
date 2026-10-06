@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>偶極與折射：光為什麼會轉彎</title>
+<style>
+  :root {
+    --primary: #1565C0;
+    --accent:  #E65100;
+    --bg:      #F5F7FA;
+    --card:    #FFFFFF;
+    --ok:      #2E7D32;
+    --bad:     #C62828;
+    --blue:    #1E88E5;
+    --red:     #D84315;
+    --green:   #2E7D32;
+    --orange:  #EF6C00;
+    --purple:  #8E24AA;
+    --muted:   #607D8B;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: #1a1c1f;
+    font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    line-height: 1.6;
+  }
+  header {
+    background: var(--primary); color: #fff; padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    position: sticky; top: 0; z-index: 10;
+  }
+  header h1 { font-size: 18px; margin: 0; white-space: nowrap; }
+  .tabs { display: flex; gap: 6px; overflow-x: auto; max-width: 100%; }
+  .tabs button {
+    border: none; border-radius: 6px; padding: 6px 12px; font-size: 14px;
+    cursor: pointer; background: rgba(255,255,255,.2); color: #fff; white-space: nowrap;
+  }
+  .tabs button.active { background: #fff; color: var(--primary); font-weight: bold; }
+  main { padding: 16px; max-width: 1100px; margin: 0 auto; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .card {
+    background: var(--card); border-radius: 10px; padding: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.12); margin-bottom: 16px;
+  }
+  h2 { font-size: 20px; margin: 0 0 8px; }
+  h3 { font-size: 16px; margin: 0 0 6px; }
+  canvas { display: block; width: 100%; border-radius: 8px; background: #fff; touch-action: none; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; margin: 10px 0; }
+  .controls label { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .controls input[type=range] { width: 170px; }
+  .controls output { min-width: 3.5em; font-variant-numeric: tabular-nums; font-weight: bold; }
+  .readout {
+    background: #EEF3FA; border-radius: 8px; padding: 8px 12px; font-size: 15px;
+    min-height: 2.4em; font-variant-numeric: tabular-nums;
+  }
+  .seg { display: inline-flex; border: 1px solid #B0BEC5; border-radius: 8px; overflow: hidden; }
+  .seg button { border: none; background: #fff; padding: 6px 10px; font-size: 13px; cursor: pointer; }
+  .seg button.on { background: var(--primary); color: #fff; }
+  .btn {
+    border: none; border-radius: 8px; padding: 8px 14px; font-size: 14px;
+    background: var(--primary); color: #fff; cursor: pointer; margin-right: 6px;
+  }
+  .btn.secondary { background: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; margin-top: 6px; }
+  .legend span::before { content: ""; display: inline-block; width: 18px; height: 4px; margin-right: 6px; vertical-align: middle; background: currentColor; }
+  .note { font-size: 13px; color: #546E7A; }
+  /* ====== POE 預測卡 ====== */
+  .predict { border-left: 5px solid var(--accent); }
+  .predict .opts { display: grid; gap: 6px; margin-top: 8px; }
+  .predict .opts button {
+    text-align: left; border: 1px solid #CFD8DC; background: #fff; border-radius: 8px;
+    padding: 8px 12px; font-size: 14px; cursor: pointer;
+  }
+  .predict .opts button.picked { border-color: var(--accent); background: #FFF3E0; font-weight: bold; }
+  .predict .msg { margin-top: 8px; font-size: 14px; color: var(--accent); }
+  .sim { position: relative; }
+  .sim.locked > *:not(.lockmsg) { filter: blur(5px); pointer-events: none; opacity: .5; }
+  .sim .lockmsg { display: none; }
+  .sim.locked .lockmsg {
+    display: flex; position: absolute; inset: 0; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: bold; color: var(--accent); z-index: 2; text-align: center; padding: 20px;
+  }
+  details.explain { margin-top: 10px; }
+  details.explain summary { cursor: pointer; font-weight: bold; color: var(--primary); }
+  details.explain[aria-disabled="true"] summary { color: #9E9E9E; pointer-events: none; }
+  /* ====== 導覽頁 ====== */
+  .chain { display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px; margin: 10px 0; }
+  .chain .box { flex: 1 1 140px; border-radius: 8px; padding: 8px 10px; font-size: 14px; background: #E3F2FD; }
+  .chain .box.bad { background: #FFEBEE; text-decoration: line-through; color: #B71C1C; }
+  .chain .box.key { background: #FFF3E0; border: 2px solid var(--accent); }
+  .chain .arr { align-self: center; font-size: 20px; color: #90A4AE; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .steps button {
+    text-align: left; border: 1px solid #CFD8DC; border-radius: 10px; background: #fff;
+    padding: 10px 12px; cursor: pointer; font-size: 14px;
+  }
+  .steps button b { display: block; font-size: 15px; color: var(--primary); }
+  /* ====== 題庫 ====== */
+  .q { margin-bottom: 14px; }
+  .q .stem { font-weight: bold; margin-bottom: 6px; }
+  .q label { display: block; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+  .q label:hover { background: #EEF3FA; }
+  .q.correct .stem::after { content: "　✔ 答對"; color: var(--ok); }
+  .q.wrong   .stem::after { content: "　✘ 再想想"; color: var(--bad); }
+  details.explain table td, details.explain table th { border-bottom: 1px solid #ECEFF1; padding: 6px 8px; vertical-align: top; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 720px) { .two { grid-template-columns: 1fr; } .controls input[type=range] { width: 130px; } }
+  @media print {
+    header, .tabs, .no-print, .panel:not(#panel-quiz) { display: none !important; }
+    #panel-quiz { display: block !important; }
+    body { background: #fff; }
+    .card { box-shadow: none; padding: 0; }
+    .q.correct .stem::after, .q.wrong .stem::after { content: ""; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔬 偶極與折射</h1>
+  <nav class="tabs">
+    <button class="active" data-tab="intro">導覽</button>
+    <button data-tab="t1">1 彈簧電子</button>
+    <button data-tab="t2">2 小天線</button>
+    <button data-tab="t3">3 兩波相加 ⭐</button>
+    <button data-tab="t4">4 一層層累積</button>
+    <button data-tab="t5">5 斜射偏折</button>
+    <button data-tab="t6">6 色散挑戰</button>
+    <button data-tab="t7">7 真的變慢了？</button>
+    <button data-tab="quiz">隨堂測驗</button>
+  </nav>
+</header>
+
+<main>
+<!-- ================= 導覽 ================= -->
+<section class="panel active" id="panel-intro">
+  <div class="card">
+    <h2>光進入玻璃為什麼會「變慢」、會「轉彎」？</h2>
+    <p>很多人會這樣想：</p>
+    <div class="chain">
+      <div class="box">光的電場推動玻璃裡的電子雲</div><div class="arr">→</div>
+      <div class="box">電子雲被推歪，形成偶極矩</div><div class="arr">→</div>
+      <div class="box bad">偶極產生反向電場，把光「擋慢」</div><div class="arr">→</div>
+      <div class="box bad">？？？（卡住）</div>
+    </div>
+    <p>前兩步是對的。第三步是<b>靜電</b>的想法（像電容器裡的介電質）。可是光的電場每秒翻轉約 500 兆次，電子會<b>一直晃</b>。一直晃的電荷會發射電磁波。所以正確的鏈是：</p>
+    <div class="chain">
+      <div class="box">光的電場推動電子<br><small>（第 1 階）</small></div><div class="arr">→</div>
+      <div class="box">晃動的偶極變成小天線，發出二次波<br><small>（第 2 階）</small></div><div class="arr">→</div>
+      <div class="box key">二次波與原本的波相加，波峰被往後拖<br><small>（第 3 階）</small></div><div class="arr">→</div>
+      <div class="box">一層層累積，看起來速度變成 c/n<br><small>（第 4 階）</small></div><div class="arr">→</div>
+      <div class="box">斜射時邊界依序被驅動，波前轉彎<br><small>（第 5 階）</small></div>
+    </div>
+    <p class="note">每一階都是「預測 → 操作 → 解釋」：先做預測，動畫才會解鎖。</p>
+    <p>👉 給國中生的簡化版：<a href="junior.html">光為什麼會變慢（國中版）</a></p>
+  </div>
+  <div class="card">
+    <h3>選一階開始</h3>
+    <div class="steps">
+      <button data-go="t1"><b>1 彈簧上的電子</b>被光推的電子，跟得上光的節拍嗎？</button>
+      <button data-go="t2"><b>2 小天線</b>一直晃的電荷會做什麼？</button>
+      <button data-go="t3"><b>3 兩波相加 ⭐</b>大波加上慢一點的小波，會變成什麼？</button>
+      <button data-go="t4"><b>4 一層層累積</b>延遲怎麼變成「光變慢」？</button>
+      <button data-go="t5"><b>5 斜射偏折</b>邊界上的波浪舞，怎麼讓光轉彎？</button>
+      <button data-go="t6"><b>6 色散挑戰</b>為什麼藍光偏得比紅光多？</button>
+      <button data-go="t7"><b>7 光到底有沒有變慢？</b>不用 n，直接從電子算出脈衝變慢</button>
+    </div>
+    <p class="no-print" style="margin-top:12px"><button class="btn secondary" onclick="resetProgress()">重設所有預測</button></p>
+  </div>
+</section>
+
+<!-- ================= 第 1 階 ================= -->
+<section class="panel" id="panel-t1">
+  <div class="card predict" data-p="t1"></div>
+  <div class="card sim locked" id="sim-t1">
+    <div class="lockmsg">先在上面做預測，動畫才會解鎖 🔒</div>
+    <h2>1　彈簧上的電子</h2>
+    <p class="note">電子被原子核拉住，就像掛在彈簧上的球。彈簧有自己最順的晃動節奏，叫「共振頻率 ω₀」。光的電場以頻率 ω 週期性地推它。</p>
+    <canvas id="cv1"></canvas>
+    <div class="legend"><span style="color:var(--blue)">E：光的電場</span><span style="color:var(--red)">p：偶極矩（電子被推歪造成）</span></div>
+    <div class="controls">
+      <label>光的頻率 ÷ 共振頻率（ω/ω₀）<input type="range" id="r1" min="0.05" max="2.5" step="0.01" value="0.4"><output id="r1o"></output></label>
+      <span><button class="btn secondary pausebtn">⏸ 暫停</button></span>
+    </div>
+    <div class="readout" id="ro1"></div>
+    <details class="explain"><summary>看解釋</summary>
+      <p><b>ω 比 ω₀ 小（可見光打在玻璃）：</b>彈簧來得及反應，電子跟著力同步晃。電子帶負電，所以電子往電場的<b>反方向</b>跑，但偶極矩 p 的方向（從負電指向正電）剛好和 E <b>同方向、同步</b>。</p>
+      <p><b>ω 接近 ω₀：</b>共振，晃得最大，而且 p 落後 E 約 1/4 拍。這時光會被大量吸收。</p>
+      <p><b>ω 比 ω₀ 大（例如 X 光）：</b>電子太重、反應不過來，變成和力「反著」晃，p 和 E 反相。</p>
+      <p>玻璃中電子的共振頻率在<b>紫外光</b>範圍，所以可見光屬於第一種情況。這一點在第 3、6 階會用到。</p>
+    </details>
+  </div>
+</section>
+
+<!-- ================= 第 2 階 ================= -->
+<section class="panel" id="panel-t2">
+  <div class="card predict" data-p="t2"></div>
+  <div class="card sim locked" id="sim-t2">
+    <div class="lockmsg">先在上面做預測，動畫才會解鎖 🔒</div>
+    <h2>2　晃動的偶極＝小天線</h2>
+    <canvas id="cv2"></canvas>
+    <div class="controls">
+      <span class="seg" id="seg2"><button data-v="static">靜止的偶極</button><button data-v="osc" class="on">一直晃的偶極</button></span>
+      <span><button class="btn secondary pausebtn">⏸ 暫停</button></span>
+    </div>
+    <div class="readout" id="ro2"></div>
+    <p class="note">紅＝電場（上下方向的部分）和偶極箭頭同向，藍＝反向，白色代表電場為零。「晃動」畫面的顏色深淺經過調整以便觀察；真實的輻射電場強度隨距離 1/r 遞減。圖中只畫遠處的輻射場。</p>
+    <details class="explain"><summary>看解釋</summary>
+      <p><b>靜止的偶極</b>只在自己附近有電場，距離一遠就很快消失（約 1/r³），而且不會往外跑。這就是你原本想的「反向電場」。</p>
+      <p><b>一直晃的偶極</b>會不斷往外送出波紋：它變成一支小天線，發出和光<b>同頻率</b>的電磁波，叫做「二次波」。</p>
+      <p>注意：沿著偶極晃動的方向（圖中的上下方向）幾乎沒有波發出來，最強的是垂直於晃動方向的地方。</p>
+      <p>所以問題不再是「反向電場會怎樣」，而是：<b>幾十億支小天線發出的二次波，和原本的光加在一起，會變成什麼？</b>→ 第 3 階。</p>
+    </details>
+  </div>
+</section>
+
+<!-- ================= 第 3 階 ================= -->
+<section class="panel" id="panel-t3">
+  <div class="card predict" data-p="t3"></div>
+  <div class="card sim locked" id="sim-t3">
+    <div class="lockmsg">先在上面做預測，動畫才會解鎖 🔒</div>
+    <h2>3　兩波相加：延遲是怎麼來的 ⭐</h2>
+    <p class="note">光從左往右走。中間虛線是一「整片」薄薄的原子層（很多偶極排成一面牆）。</p>
+    <canvas id="cv3"></canvas>
+    <div class="legend"><span style="color:var(--blue)">原本的光</span><span style="color:var(--orange)">原子層發出的二次波</span><span style="color:var(--green)">兩者相加（實際測得的光）</span></div>
+    <div class="controls">
+      <label>二次波強度 a（原子越密越大）<input type="range" id="a3" min="0" max="0.6" step="0.01" value="0.35"><output id="a3o"></output></label>
+      <span class="seg" id="seg3">
+        <button data-v="lag" class="on">實際：落後 1/4 拍（可見光）</button>
+        <button data-v="lead">實際：超前 1/4 拍（X 光）</button>
+        <button data-v="same">思考實驗：同步（非真實）</button>
+      </span>
+      <label><input type="checkbox" id="back3" checked> 顯示往回走的二次波</label>
+      <span><button class="btn secondary pausebtn">⏸ 暫停</button></span>
+    </div>
+    <div class="readout" id="ro3"></div>
+    <p class="note">⚠ a 被故意放大到看得見。真實的一層原子 a 極小，此時相加後的振幅幾乎不變（振幅變化是更高階的小效應），只剩下「延遲」。</p>
+    <details class="explain"><summary>看解釋</summary>
+      <p><b>重點一：原本的光沒有消失。</b>藍色波在原子層後面照樣用光速 c 往前走。</p>
+      <p><b>重點二：二次波比原本的光慢 1/4 拍。</b>在很遠的地方看，一整片偶極加起來的電場，正比於「偶極變化的快慢」再加上一個負號。變化的快慢比偶極本身超前 1/4 拍，負號再翻半拍，合起來就是<b>落後 1/4 拍</b>。（詳見 Feynman 物理學講義第一冊第 30、31 章。）</p>
+      <p><b>重點三：大波 + 落後 1/4 拍的小波 = 往後退一點的波。</b>綠色波峰落在藍色波峰的<b>後面</b>。這就是延遲。</p>
+      <p>切到「思考實驗：同步」看看：如果二次波和原本的光同步，相加只會讓波變大，波峰不會移動。所以<b>延遲來自那 1/4 拍的時間差</b>，不是來自「反向電場擋住光」。</p>
+      <p>切到「超前 1/4 拍」：電子反著晃（第 1 階的高頻情況），波峰往前跑，這就是 X 光在玻璃中折射率略小於 1 的原因。注意：n&lt;1 只代表「波峰的位置」（相速度）跑得比 c 快，能量和訊息仍然不會超過光速。</p>
+      <p>往回走的二次波，疊起來就是<b>反射光</b>。反射和折射來自同一批偶極。</p>
+    </details>
+  </div>
+</section>
+
+<!-- ================= 第 4 階 ================= -->
+<section class="panel" id="panel-t4">
+  <div class="card predict" data-p="t4"></div>
+  <div class="card sim locked" id="sim-t4">
+    <div class="lockmsg">先在上面做預測，動畫才會解鎖 🔒</div>
+    <h2>4　一層層累積：看起來變慢了</h2>
+    <p class="note">上排：只有真空的參考光。下排：同一道光穿過一塊由很多原子層組成的介質（灰色區域）。灰色虛線標出真空光的波峰位置，三角形標出實際的波峰。</p>
+    <canvas id="cv4"></canvas>
+    <div class="controls">
+      <label>每層延遲 a（弧度）<input type="range" id="a4" min="0" max="0.6" step="0.01" value="0.25"><output id="a4o"></output></label>
+      <label>原子層數 N<input type="range" id="n4" min="1" max="40" step="1" value="12"><output id="n4o"></output></label>
+      <span class="seg" id="seg4"><button data-v="step" class="on">逐層（真實機制）</button><button data-v="smooth">連續近似</button></span>
+      <span><button class="btn secondary pausebtn">⏸ 暫停</button></span>
+    </div>
+    <div class="readout" id="ro4"></div>
+    <p class="note">⚠ 為了看得見，層數很少、每層延遲很大。真實玻璃每一層原子只造成極小的延遲，但一公釐厚就有數百萬層。</p>
+    <details class="explain"><summary>看解釋</summary>
+      <p>在「逐層」模式仔細看下排的三角形：在兩層之間，波峰還是用<b>光速 c</b> 前進；每穿過一層，就被往後拖一點。</p>
+      <p>平均起來，波峰前進得比 c 慢。這個「波峰平均前進速度」叫<b>相速度</b>，就是 c/n。</p>
+      <p>讀數中的 n 是這樣算的：穿過厚度 L 的介質，總共延遲 N·a（弧度），所以 n = 1 + N·a ÷ (2π · L/λ)。</p>
+      <p>光穿出介質後，又恢復用 c 前進，但已經落後了一段，追不回來。</p>
+      <p>這也說明一個常見迷思是錯的：「光子被原子吸收、停一下再放出來，所以變慢」。實際上光從頭到尾沒有停，是波形被疊加一次次往後拖。</p>
+    </details>
+  </div>
+</section>
+
+<!-- ================= 第 5 階 ================= -->
+<section class="panel" id="panel-t5">
+  <div class="card predict" data-p="t5"></div>
+  <div class="card sim locked" id="sim-t5">
+    <div class="lockmsg">先在上面做預測，動畫才會解鎖 🔒</div>
+    <h2>5　斜射：邊界上的波浪舞</h2>
+    <p class="note">左邊是空氣，右邊是介質。邊界上的圓點是偶極，顏色表示它此刻被推的方向。<b>簡化：</b>介質裡的小波直接用第 4 階得到的速度 c/n 前進（真實情況是每個小波在原子之間仍以 c 前進，是一層層偶極疊加後「整體」才等效成 c/n；這裡直接借用第 4 階的結論）。</p>
+    <canvas id="cv5"></canvas>
+    <div class="controls">
+      <label>入射角 θ₁<input type="range" id="th5" min="0" max="65" step="1" value="40"><output id="th5o"></output></label>
+      <label>折射率 n<input type="range" id="n5" min="1" max="2" step="0.01" value="1.5"><output id="n5o"></output></label>
+      <span class="seg" id="seg5"><button data-v="heat" class="on">全部偶極疊加（場的顏色）</button><button data-v="wave">小波作圖（Huygens）</button></span>
+      <span><button class="btn secondary pausebtn">⏸ 暫停</button></span>
+    </div>
+    <div class="readout" id="ro5"></div>
+    <p class="note">紫色實線：入射光線與依 Snell 定律算出的折射光線。只畫往前進的光，不畫反射光。</p>
+    <details class="explain"><summary>看解釋</summary>
+      <p><b>波浪舞：</b>光斜斜打到邊界，邊界上的偶極不是同時被推，而是從上到下依序被推，像體育場觀眾做波浪舞。這個「依序」的節奏由入射光決定。</p>
+      <p><b>小波：</b>邊界偶極發出的二次波進入介質後，又會一路被後面的原子層「拖慢」（第 4 階），所以整體等效為以 c/n 前進、波長變短。為了簡化，這裡直接讓小波用 c/n 前進；別因此以為原子之間的場是用 c/n 在跑。</p>
+      <p><b>轉彎：</b>在「全部偶極疊加」模式中，右半邊的條紋完全是由邊界上的偶極加總算出來的，程式<b>沒有</b>事先畫好折射波。條紋會自動沿著紫色的 Snell 光線走。</p>
+      <p>在「小波作圖」模式中，橘色圓弧是每個偶極的小波波峰，綠色虛線是它們共同的包絡線，也就是折射波的波前。</p>
+      <p>把 n 調到 1：介質和空氣一樣，光不轉彎。把 θ₁ 調到 0：邊界上所有偶極同時被推，光也不轉彎。<b>要轉彎，兩個條件缺一不可：斜射＋波長改變。</b></p>
+    </details>
+  </div>
+</section>
+
+<!-- ================= 第 6 階 ================= -->
+<section class="panel" id="panel-t6">
+  <div class="card predict" data-p="t6"></div>
+  <div class="card sim locked" id="sim-t6">
+    <div class="lockmsg">先在上面做預測，動畫才會解鎖 🔒</div>
+    <h2>6　色散：為什麼三稜鏡會分出彩虹</h2>
+    <div class="two">
+      <div><h3>折射率 n 與波長</h3><canvas id="cv6a"></canvas></div>
+      <div><h3>三稜鏡（60° 頂角）</h3><canvas id="cv6b"></canvas></div>
+    </div>
+    <div class="controls">
+      <label>電子的共振波長 λ₀（紫外光區）<input type="range" id="l6" min="60" max="240" step="1" value="100"><output id="l6o"></output></label>
+    </div>
+    <div class="readout" id="ro6"></div>
+    <p class="note">模型：單一共振的 Sellmeier 式 n² = 1 + B·λ²/(λ² − λ₀²)，B = 1.273。λ₀ = 100 nm 時，n(589 nm) ≈ 1.52，接近一般冕牌玻璃。三稜鏡圖依實際角度計算，沒有誇大。</p>
+    <details class="explain"><summary>看解釋</summary>
+      <p>回到第 1 階：光的頻率越接近電子的共振頻率，電子晃得越大，二次波越強，延遲越多，n 就越大。</p>
+      <p>玻璃的共振在紫外光。藍紫光比紅光更接近紫外光，所以藍紫光的 n 比較大，在三稜鏡中偏折得比較多。</p>
+      <p>把 λ₀ 往可見光方向拉（例如 200 nm 以上），n 整體變大，而且紅、紫光的差距急速拉大：這就是高色散玻璃（如火石玻璃）的原理。</p>
+      <p><b>挑戰題：</b>X 光的頻率比電子的共振頻率高很多，依第 1、3 階，X 光在玻璃中的 n 會大於 1 還是小於 1？（提示：第 3 階的「超前 1/4 拍」）</p>
+    </details>
+  </div>
+</section>
+
+<!-- ================= 第 7 階 ================= -->
+<section class="panel" id="panel-t7">
+  <div class="card predict" data-p="t7"></div>
+  <div class="card sim locked" id="sim-t7">
+    <div class="lockmsg">先在上面做預測，動畫才會解鎖 🔒</div>
+    <h2>7　光到底有沒有變慢？</h2>
+    <p class="note">這一頁<b>沒有用到 n</b>。電腦只照兩條規則一格一格往下算：① 電磁波的規則（馬克士威方程）；② 每個電子都像彈簧上的球，被電場推著晃（第 1 階）。脈衝在介質裡變慢、波長變短、出現反射，全部是算出來的結果。</p>
+    <canvas id="cv7"></canvas>
+    <div class="legend"><span style="color:var(--blue)">光的電場 E</span><span style="color:var(--red)">電子晃動 P（示意大小）</span><span style="color:var(--green)">▼ 脈衝能量最集中的位置</span></div>
+    <div class="controls">
+      <span class="seg" id="seg7"><button data-v="pulse" class="on">一個光脈衝</button><button data-v="cw">連續的光</button></span>
+      <label>電子晃動的摩擦（變成熱）<input type="range" id="g7" min="0" max="0.03" step="0.001" value="0"><output id="g7o"></output></label>
+      <label>播放速度<input type="range" id="sp7" min="1" max="10" step="1" value="4"><output id="sp7o"></output></label>
+      <span><button class="btn" id="re7">↺ 重新發射</button><button class="btn secondary pausebtn">⏸ 暫停</button></span>
+    </div>
+    <div class="readout" id="ro7"></div>
+    <p class="note">⚠ 模擬是一維的，參數選成 n = 1.50；電子的共振頻率設在光頻率的 3 倍（代表紫外光）。左右兩端會把波吸收掉，不會反彈。</p>
+    <details class="explain"><summary>看解釋</summary>
+      <p><b>「光速」其實有三種，要分開講：</b></p>
+      <table class="table" style="width:100%;border-collapse:collapse;font-size:14px">
+        <tr><th style="text-align:left">名稱</th><th style="text-align:left">是什麼</th><th style="text-align:left">在玻璃中</th></tr>
+        <tr><td>相速度</td><td>波峰這個「花樣」前進的速度（第 3、4 階）</td><td>c/n，決定折射角</td></tr>
+        <tr><td>群速度</td><td>整個脈衝（能量、訊號）前進的速度（本頁的綠色三角形）</td><td>比 c 慢，本頁約 c/1.60</td></tr>
+        <tr><td>最前緣</td><td>脈衝最最前面、極微弱的一點點擾動</td><td>永遠是 c</td></tr>
+      </table>
+      <p><b>為什麼能量會變慢？</b>看能量條：脈衝在介質裡時，有一大塊能量是<b>暫存在電子的晃動裡</b>（紅色）。電場把能量交給電子，電子在同一拍內又把能量交回來，像接力賽中一部分棒子永遠在跑者手上傳來傳去。任何時刻都有一部分能量「停」在電子身上，所以整體往前送的速度變慢了。</p>
+      <p><b>這和「吸收再放出」不一樣：</b>電子沒有吸收一整份能量、等一段時間才放出來。它是和光<b>同步</b>連續晃動，每一拍都在收、也都在還。</p>
+      <p><b>把摩擦拉到 0：</b>脈衝照樣變慢。所以變慢<b>不是</b>因為能量變成熱。摩擦只會讓光越走越弱（被吸收），對速度幾乎沒影響。</p>
+      <p><b>最前緣為什麼是 c？</b>電子在光到達之前不會動，所以最前面那一點點電場前面沒有任何東西可以疊加，只能用 c 前進。之後電子開始晃、二次波才開始疊上去，波形才被拖慢。這一小段最前緣的波非常微弱（稱為「前驅波」），本模擬的格子太粗，算不出來。</p>
+    </details>
+  </div>
+</section>
+
+<!-- ================= 隨堂測驗 ================= -->
+<section class="panel" id="panel-quiz">
+  <div class="card">
+    <h2>隨堂測驗：光的折射（微觀觀點）</h2>
+    <div id="quiz-area"></div>
+    <div class="no-print">
+      <button class="btn" onclick="gradeQuiz()">對答案</button>
+      <button class="btn secondary" onclick="shuffleQuiz()">換順序（洗牌）</button>
+      <button class="btn secondary" onclick="window.print()">🖨 列印卷子</button>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+/* =====================================================================
+   共用工具
+   ===================================================================== */
+const $ = (s) => document.querySelector(s);
+const TAU = Math.PI * 2;
+const DEG = Math.PI / 180;
+let T = 0;              // 光的相位 ωt（每 2 秒走一圈）
+let paused = false;
+let active = "intro";
+
+/* 讓 canvas 跟著容器寬度調整，並處理高解析螢幕 */
+function fit(id, aspect, minH) {
+  const cv = document.getElementById(id);
+  // 用 canvas 自己的 CSS 寬度（parent.clientWidth 含 padding，會讓畫面被水平壓扁、角度失真）
+  const w = cv.clientWidth;
+  if (!w) return null;
+  const h = Math.max(minH || 0, Math.round(w * aspect));
+  const dpr = window.devicePixelRatio || 1;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    cv.style.height = h + "px";
+  }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+}
+
+function arrow(ctx, x1, y1, x2, y2, color, lw = 2) {
+  const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy);
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = lw;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  if (L < 4) return;
+  const ux = dx / L, uy = dy / L, hs = Math.min(10, L * 0.45);
+  ctx.beginPath(); ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - ux * hs - uy * hs * 0.5, y2 - uy * hs + ux * hs * 0.5);
+  ctx.lineTo(x2 - ux * hs + uy * hs * 0.5, y2 - uy * hs - ux * hs * 0.5);
+  ctx.closePath(); ctx.fill();
+}
+
+/* 畫一條波：f(X) 回傳 -1~1 左右的值 */
+function plotWave(ctx, X0, X1, yMid, amp, f, color, lw, dash) {
+  ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = lw;
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath();
+  let first = true;
+  for (let X = X0; X <= X1 + 0.01; X += 2) {
+    const y = yMid - amp * f(X);
+    if (first) { ctx.moveTo(X, y); first = false; } else ctx.lineTo(X, y);
+  }
+  ctx.stroke(); ctx.restore();
+}
+
+function text(ctx, s, x, y, color = "#37474F", size = 13, align = "left") {
+  ctx.fillStyle = color; ctx.font = `${size}px "PingFang TC","Microsoft JhengHei",sans-serif`;
+  ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(s, x, y);
+}
+
+/* 紅（正）—白（零）—藍（負）色階 */
+function cmap(v) {
+  v = Math.max(-1, Math.min(1, v));
+  if (v >= 0) return [255 - 41 * v, 255 - 186 * v, 255 - 201 * v];
+  v = -v; return [255 - 218 * v, 255 - 156 * v, 255 - 54 * v];
+}
+
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+
+/* =====================================================================
+   第 1 階：受迫振盪（彈簧上的電子）
+   穩態：電子位移 x = −A·cos(ωt − δ)（電子帶負電，受力 −eE）
+         偶極 p = −e·x ∝ A·cos(ωt − δ)
+         A = 1/√((1−r²)² + (γr)²)，tanδ = γr/(1−r²)，r = ω/ω₀
+   ===================================================================== */
+const P1 = { r: 0.4, g: 0.08 };
+function draw1() {
+  const c = fit("cv1", 0.48, 260); if (!c) return;
+  const { ctx, w, h } = c;
+  ctx.clearRect(0, 0, w, h);
+  const { r, g } = P1;
+  const A = 1 / Math.hypot(1 - r * r, g * r);
+  const d = Math.atan2(g * r, 1 - r * r);
+  const shown = Math.min(1, 0.3 * A);   // 顯示用振幅（太大就截斷）
+
+  // 左：時間圖
+  const lw = w * 0.56, mid = h * 0.5, amp = h * 0.34;
+  ctx.fillStyle = "#FAFBFD"; ctx.fillRect(0, 0, lw, h);
+  ctx.strokeStyle = "#CFD8DC"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(8, mid); ctx.lineTo(lw - 8, mid); ctx.stroke();
+  const win = 2 * TAU;
+  const ph = (X) => T - win * (1 - (X - 8) / (lw - 16));
+  plotWave(ctx, 8, lw - 8, mid, amp, (X) => Math.cos(ph(X)), "#1E88E5", 2.5);
+  plotWave(ctx, 8, lw - 8, mid, amp, (X) => shown * Math.cos(ph(X) - d), "#D84315", 2.5);
+  text(ctx, "← 過去", 12, h - 12, "#90A4AE", 12);
+  text(ctx, "現在 →", lw - 12, h - 12, "#90A4AE", 12, "right");
+  if (0.3 * A > 1) text(ctx, "（p 太大，已截斷顯示）", lw / 2, 14, "#D84315", 12, "center");
+
+  // 右：彈簧示意
+  const rx = lw + 10, rw = w - lw - 20, cy = h * 0.52;
+  const ax = rx + 22, ex0 = rx + rw * 0.62;
+  const disp = -(rw * 0.22) * shown * Math.cos(T - d);   // 電子位移（與 p 反向）
+  const ex = ex0 + disp;
+  // 彈簧
+  ctx.strokeStyle = "#78909C"; ctx.lineWidth = 2; ctx.beginPath();
+  const s0 = ax + 16, s1 = ex - 20, nz = 10;
+  ctx.moveTo(s0, cy);
+  for (let i = 1; i < nz; i++) ctx.lineTo(s0 + (s1 - s0) * i / nz, cy + (i % 2 ? -9 : 9));
+  ctx.lineTo(s1, cy); ctx.stroke();
+  // 原子核
+  ctx.fillStyle = "#E53935"; ctx.beginPath(); ctx.arc(ax, cy, 15, 0, TAU); ctx.fill();
+  text(ctx, "+", ax, cy, "#fff", 18, "center");
+  text(ctx, "原子核", ax, cy + 28, "#37474F", 12, "center");
+  // 電子雲
+  ctx.fillStyle = "rgba(30,136,229,.35)"; ctx.beginPath(); ctx.arc(ex, cy, 20, 0, TAU); ctx.fill();
+  text(ctx, "−", ex, cy, "#0D47A1", 20, "center");
+  text(ctx, "電子", ex, cy + 32, "#37474F", 12, "center");
+  // E 箭頭（上）與 p 箭頭（下）
+  const L = rw * 0.3;
+  const Ey = h * 0.14, py = h * 0.88;
+  arrow(ctx, ex0, Ey, ex0 + L * Math.cos(T), Ey, "#1E88E5", 3);
+  text(ctx, "E", ex0 - L - 14, Ey, "#1E88E5", 15, "center");
+  arrow(ctx, ex0, py, ex0 - disp * (L / (rw * 0.22)), py, "#D84315", 3);
+  text(ctx, "p", ex0 - L - 14, py, "#D84315", 15, "center");
+
+  // 讀數
+  const dd = d / DEG;
+  // 依實際相位差 δ 判斷（γ 很小，δ 只在 ω≈ω₀ 附近很窄的範圍內才接近 90°）
+  let say;
+  if (dd < 30) say = "電子跟得上：p 與 E 幾乎<b>同步</b>。";
+  else if (dd <= 150) say = `接近<b>共振</b>：晃得很大，p 落後 E ${dd.toFixed(0)}°（正好共振 ω = ω₀ 時是 90°＝1/4 拍）。`;
+  else say = "電子跟不上：p 與 E 幾乎<b>反相</b>（反著晃）。";
+  $("#ro1").innerHTML = `ω/ω₀ = ${r.toFixed(2)}　｜　p 落後 E 的角度 δ = ${dd.toFixed(0)}°　｜　晃動幅度是「慢慢推」時的 ${A.toFixed(2)} 倍<br>${say}`;
+}
+
+/* =====================================================================
+   第 2 階：單一偶極的電場（靜態 vs 輻射）
+   ===================================================================== */
+const P2 = { mode: "osc" };
+const G2 = { gw: 180, gh: 110 };
+const off2 = document.createElement("canvas"); off2.width = G2.gw; off2.height = G2.gh;
+const oc2 = off2.getContext("2d"); const img2 = oc2.createImageData(G2.gw, G2.gh);
+function draw2() {
+  // 不設最小高度：高度若被撐大，網格圖會被垂直拉長而偶極箭頭（用 sc 定位）會錯位、角分布變形
+  const c = fit("cv2", G2.gh / G2.gw, 0); if (!c) return;
+  const { ctx, w, h } = c;
+  const { gw, gh } = G2, cx = gw / 2, cy = gh / 2, k = TAU / 28;
+  const D = img2.data;
+  for (let y = 0; y < gh; y++) for (let x = 0; x < gw; x++) {
+    const dx = x + 0.5 - cx, dy = y + 0.5 - cy, r = Math.sqrt(dx * dx + dy * dy) + 1e-6;
+    let v;
+    if (P2.mode === "osc") {
+      // 遠場輻射：∝ sinθ·cos(ωt − kr)/r（θ 從偶極軸量起；顯示時壓縮距離衰減）
+      const s = Math.abs(dx) / r;
+      v = r < 4 ? 0 : s * Math.cos(T - k * r) * Math.min(1, 5 / Math.sqrt(r));
+    } else {
+      // 靜態偶極電場「沿偶極方向（上下）的分量」：∝ (3cos²θ − 1)/r³
+      // 正（紅）＝與偶極箭頭同向（軸線上），負（藍）＝反向（兩側，即「反向電場」）
+      const cth = dy / r;
+      v = clamp(1500 * (3 * cth * cth - 1) / (r * r * r), -1, 1);
+    }
+    const [R, G, B] = cmap(v), i = (y * gw + x) * 4;
+    D[i] = R; D[i + 1] = G; D[i + 2] = B; D[i + 3] = 255;
+  }
+  oc2.putImageData(img2, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(off2, 0, 0, w, h);
+  // 中央偶極箭頭（沿上下方向）
+  const sc = w / gw, X = cx * sc, Y = cy * sc, L = 16 * sc;
+  const f = P2.mode === "osc" ? Math.cos(T) : 1;
+  arrow(ctx, X, Y + L * f * 0.5, X, Y - L * f * 0.5, "#212121", 3);
+  text(ctx, "偶極", X + 14, Y, "#212121", 13);
+  $("#ro2").innerHTML = P2.mode === "osc"
+    ? "一直晃的偶極：波紋不斷往外跑 → 它是一支<b>小天線</b>，發出和光同頻率的二次波。上下方向（沿著偶極）幾乎是白的＝那個方向不發射。"
+    : "靜止的偶極：電場只在附近、距離一遠就很快消失，而且<b>不會往外傳</b>。這就是「反向電場」的畫面，但光的電場一直在翻轉，偶極不可能靜止。";
+}
+
+/* =====================================================================
+   第 3 階：原本的波 + 原子層的二次波
+   原本：cos(ωt − kz)；二次波（z>0）：a·cos(ωt − kz − δs)
+   相加：R·cos(ωt − kz − Δ)，Δ = atan2(a·sinδs, 1 + a·cosδs)
+   ===================================================================== */
+const P3 = { a: 0.35, mode: "lag", back: true };
+function draw3() {
+  const c = fit("cv3", 0.62, 330); if (!c) return;
+  const { ctx, w, h } = c;
+  ctx.clearRect(0, 0, w, h);
+  const zmin = -1.2, zmax = 4;
+  const Xz = (z) => (z - zmin) / (zmax - zmin) * w;
+  const Zx = (X) => zmin + X / w * (zmax - zmin);
+  const rowH = h / 3, amp = rowH * 0.3;
+  const ds = P3.mode === "lag" ? Math.PI / 2 : P3.mode === "lead" ? -Math.PI / 2 : 0;
+  const a = P3.a;
+  const re = 1 + a * Math.cos(ds), im = a * Math.sin(ds);
+  const Delta = Math.atan2(im, re), R = Math.hypot(re, im);
+  const X0 = Xz(0);
+
+  for (let i = 1; i < 3; i++) { ctx.strokeStyle = "#ECEFF1"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, rowH * i); ctx.lineTo(w, rowH * i); ctx.stroke(); }
+  // 原子層
+  ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = "#90A4AE"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(X0, 0); ctx.lineTo(X0, h); ctx.stroke(); ctx.restore();
+  for (let y = rowH * 1.1; y < rowH * 1.9; y += 12) {
+    ctx.fillStyle = "#D84315"; ctx.beginPath(); ctx.arc(X0, y, 3, 0, TAU); ctx.fill();
+  }
+
+  const y1 = rowH * 0.5, y2 = rowH * 1.5, y3 = rowH * 2.5;
+  // 列一：原本的光
+  plotWave(ctx, 0, w, y1, amp, (X) => Math.cos(T - TAU * Zx(X)), "#1E88E5", 2.5);
+  text(ctx, "① 原本的光（一直用光速 c 前進）", 8, rowH * 0.12, "#1E88E5", 13);
+  // 列二：二次波
+  plotWave(ctx, X0, w, y2, amp, (X) => a * Math.cos(T - TAU * Zx(X) - ds), "#EF6C00", 2.5);
+  if (P3.back) plotWave(ctx, 0, X0, y2, amp, (X) => a * Math.cos(T + TAU * Zx(X) - ds), "#EF6C00", 2, [5, 4]);
+  text(ctx, "② 原子層發出的二次波", 8, rowH * 1.12, "#EF6C00", 13);
+  if (P3.back) text(ctx, "← 往回走＝反射光的來源", 8, rowH * 1.88, "#EF6C00", 12);
+  // 列三：相加
+  plotWave(ctx, 0, X0, y3, amp, (X) => Math.cos(T - TAU * Zx(X)), "#B0BEC5", 2);
+  plotWave(ctx, X0, w, y3, amp, (X) => Math.cos(T - TAU * Zx(X)), "#1E88E5", 1.5, [4, 4]);
+  plotWave(ctx, X0, w, y3, amp, (X) => R * Math.cos(T - TAU * Zx(X) - Delta), "#2E7D32", 3);
+  text(ctx, "③ ① + ② 相加（藍虛線＝沒有原子時的位置）", 8, rowH * 2.12, "#2E7D32", 13);
+
+  // 波峰標記：藍 z = T/2π − m，綠 z = (T − Δ)/2π − m
+  const base = T / TAU;
+  for (let m = Math.floor(base - zmax) - 1; m <= Math.floor(base) + 1; m++) {
+    const zb = base - m, zg = (T - Delta) / TAU - m;
+    const top = y3 - amp * 1.25, bot = y3 + amp * 1.25;
+    if (zb > 0.02 && zb < zmax) {
+      ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = "#1E88E5"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(Xz(zb), top); ctx.lineTo(Xz(zb), bot); ctx.stroke(); ctx.restore();
+    }
+    if (zg > 0.02 && zg < zmax) {
+      const X = Xz(zg);
+      ctx.fillStyle = "#2E7D32"; ctx.beginPath();
+      ctx.moveTo(X, y3 - amp * R - 4); ctx.lineTo(X - 6, y3 - amp * R - 14); ctx.lineTo(X + 6, y3 - amp * R - 14); ctx.closePath(); ctx.fill();
+    }
+  }
+
+  const frac = Delta / TAU;
+  const dir = Math.abs(Delta) < 1e-6 ? "波峰<b>沒有移動</b>，只是變大或變小"
+    : Delta > 0 ? "綠色波峰落在藍色虛線<b>後面</b> → 光被<b>延遲</b>了"
+    : "綠色波峰跑到藍色虛線<b>前面</b> → 光被<b>超前</b>了";
+  const ampNote = (P3.mode !== "same" && R > 1.005)
+    ? "<br><small>（振幅略大於 1 是「只疊加一次」的近似造成的；把往回走的反射光也算進能量帳後，穿透的光不會變強。a 很小時這個效應是 a² 級，可忽略。）</small>" : "";
+  $("#ro3").innerHTML = `波峰位移：${(Delta / DEG).toFixed(1)}°＝${Math.abs(frac).toFixed(3)} 個波長　｜　振幅變為 ${R.toFixed(2)} 倍<br>${dir}${ampNote}`;
+}
+
+/* =====================================================================
+   第 4 階：多層累積
+   介質中：cos(ωt − kz − extra(z))，extra = a × 已穿過的層數
+   ===================================================================== */
+const P4 = { a: 0.25, N: 12, mode: "step" };
+function draw4() {
+  const c = fit("cv4", 0.5, 280); if (!c) return;
+  const { ctx, w, h } = c;
+  ctx.clearRect(0, 0, w, h);
+  const zmax = 8, s0 = 2, L = 3, { a, N } = P4;
+  const Xz = (z) => z / zmax * w, Zx = (X) => X / w * zmax;
+  const layers = []; for (let j = 0; j < N; j++) layers.push(s0 + (j + 0.5) * L / N);
+  const extra = (z) => {
+    if (P4.mode === "smooth") return a * N * clamp((z - s0) / L, 0, 1);
+    let n = 0; for (const zj of layers) if (zj < z) n++; return a * n;
+  };
+  const rowH = h / 2, amp = rowH * 0.3, yA = rowH * 0.5, yB = rowH * 1.5;
+  // 介質區
+  ctx.fillStyle = "#ECEFF1"; ctx.fillRect(Xz(s0), rowH, Xz(L), rowH);
+  if (P4.mode === "step") for (const zj of layers) {
+    ctx.save(); ctx.setLineDash([2, 3]); ctx.strokeStyle = "#B0BEC5";
+    ctx.beginPath(); ctx.moveTo(Xz(zj), rowH + 6); ctx.lineTo(Xz(zj), h - 6); ctx.stroke(); ctx.restore();
+  }
+  ctx.strokeStyle = "#CFD8DC"; ctx.beginPath(); ctx.moveTo(0, rowH); ctx.lineTo(w, rowH); ctx.stroke();
+  // 真空波峰參考線
+  const base = T / TAU;
+  for (let m = Math.floor(base - zmax) - 1; m <= Math.floor(base) + 1; m++) {
+    const z = base - m; if (z < 0 || z > zmax) continue;
+    ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = "#90A4AE"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(Xz(z), 4); ctx.lineTo(Xz(z), h - 4); ctx.stroke(); ctx.restore();
+  }
+  plotWave(ctx, 0, w, yA, amp, (X) => Math.cos(T - TAU * Zx(X)), "#1E88E5", 2.5);
+  plotWave(ctx, 0, w, yB, amp, (X) => Math.cos(T - TAU * Zx(X) - extra(Zx(X))), "#2E7D32", 2.5);
+  text(ctx, "真空（參考）", 8, rowH * 0.1, "#1E88E5", 13);
+  text(ctx, "穿過介質", 8, rowH * 1.1, "#2E7D32", 13);
+  text(ctx, "介質", Xz(s0 + L / 2), h - 10, "#78909C", 12, "center");
+  // 介質列的真實波峰：相位 ωt − kz − extra 連續穿過 2π 的整數倍處
+  let prev = null;
+  for (let X = 0; X <= w; X += 1) {
+    const z = Zx(X), q = (T - TAU * z - extra(z)) / TAU;
+    if (prev !== null && Math.floor(q) !== Math.floor(prev) && Math.abs(q - prev) < 0.2) {
+      ctx.fillStyle = "#2E7D32"; ctx.beginPath();
+      ctx.moveTo(X, yB - amp - 4); ctx.lineTo(X - 6, yB - amp - 14); ctx.lineTo(X + 6, yB - amp - 14); ctx.closePath(); ctx.fill();
+    }
+    prev = q;
+  }
+  const tot = a * N, n = 1 + tot / (TAU * L);
+  $("#ro4").innerHTML = `總延遲 = N × a = ${tot.toFixed(2)} 弧度＝${(tot / TAU).toFixed(2)} 個波長　｜　介質厚度 3 個波長　｜　等效折射率 n ≈ <b>${n.toFixed(3)}</b>（相速度 ≈ c / ${n.toFixed(2)}）`;
+}
+
+/* =====================================================================
+   第 5 階：斜射——邊界偶極的二次波疊加出折射波
+   邊界 x = gx0。第 j 個偶極的驅動相位 φj = k₁(gx0·cosθ₁ + yj·sinθ₁)
+   介質中場 = Re[ Σ wj·e^{−i(φj + k₂r)}/√(k₂r+1) · e^{iωt} ]
+   ===================================================================== */
+const P5 = { th1: 40, n: 1.5, mode: "heat" };
+const G5 = { gw: 240, gh: 150, gx0: 100, lam: 26 };
+const off5 = document.createElement("canvas"); off5.width = G5.gw; off5.height = G5.gh;
+const oc5 = off5.getContext("2d"); const img5 = oc5.createImageData(G5.gw, G5.gh);
+let S5r = null, S5i = null, norm5 = 1, dirty5 = true;
+function compute5() {
+  const { gw, gh, gx0, lam } = G5;
+  const k1 = TAU / lam, k2 = k1 * P5.n, th = P5.th1 * DEG, s1 = Math.sin(th), c1 = Math.cos(th);
+  const cols = gw - gx0;
+  S5r = new Float32Array(cols * gh); S5i = new Float32Array(cols * gh);
+  // 偶極列要往上延伸到能涵蓋「右上角像素的主要貢獻點」y* = y − dx·tanθ₂，
+  // 否則 θ₂ 大（n 接近 1、θ₁ 大）時右上角會被截斷而方向跑掉。
+  const s2 = s1 / P5.n, t2 = s2 / Math.sqrt(Math.max(1e-6, 1 - s2 * s2)), taper = 80;
+  const yA = -Math.max(240, Math.ceil(cols * t2) + taper + 100), yB = gh + taper + 20;
+  const src = [];
+  for (let y = yA; y <= yB; y += 3) {
+    const e = Math.min(y - yA, yB - y);
+    const wgt = e < taper ? 0.5 - 0.5 * Math.cos(Math.PI * e / taper) : 1;
+    src.push(y, k1 * (gx0 * c1 + y * s1), wgt);
+  }
+  let acc = 0, cnt = 0;
+  for (let yy = 0; yy < gh; yy++) for (let xx = 0; xx < cols; xx++) {
+    const dx = xx + 0.5, py = yy + 0.5;
+    let sr = 0, si = 0;
+    for (let j = 0; j < src.length; j += 3) {
+      const dy = py - src[j], r = Math.sqrt(dx * dx + dy * dy);
+      const p = src[j + 1] + k2 * r, am = src[j + 2] / Math.sqrt(k2 * r + 1);
+      sr += am * Math.cos(p); si -= am * Math.sin(p);
+    }
+    // 二維小波（線狀波源）加總後整體會多落後 π/4（固定常數，與方向無關）。
+    // 乘上 e^{+iπ/4} 補回，讓折射波在邊界上與入射波相位接續（電場切向連續）。
+    const idx = yy * cols + xx; S5r[idx] = (sr - si) * Math.SQRT1_2; S5i[idx] = (sr + si) * Math.SQRT1_2;
+    if (xx > 30 && xx < cols - 10 && yy > gh * 0.3 && yy < gh * 0.7) { acc += Math.hypot(sr, si); cnt++; }
+  }
+  norm5 = cnt ? acc / cnt : 1;
+  dirty5 = false;
+}
+function draw5() {
+  // 不設最小高度：高度若被撐大，場圖會被垂直拉長，但光線與偶極用同一個 sc 定位 → 條紋和 Snell 光線對不上
+  const c = fit("cv5", G5.gh / G5.gw, 0); if (!c) return;
+  const { ctx, w, h } = c;
+  const { gw, gh, gx0, lam } = G5, sc = w / gw;
+  const k1 = TAU / lam, k2 = k1 * P5.n, th = P5.th1 * DEG, s1 = Math.sin(th), c1 = Math.cos(th);
+  const th2 = Math.asin(s1 / P5.n), s2 = Math.sin(th2), c2 = Math.cos(th2);
+
+  if (P5.mode === "heat") {
+    if (dirty5) compute5();
+    const D = img5.data, cols = gw - gx0, cT = Math.cos(T), sT = Math.sin(T);
+    for (let y = 0; y < gh; y++) for (let x = 0; x < gw; x++) {
+      let v;
+      if (x < gx0) v = Math.cos(T - k1 * ((x + 0.5) * c1 + (y + 0.5) * s1));
+      else { const i = y * cols + (x - gx0); v = (S5r[i] * cT - S5i[i] * sT) / norm5; }
+      const [R, G, B] = cmap(v * 0.9), i4 = (y * gw + x) * 4;
+      D[i4] = R; D[i4 + 1] = G; D[i4 + 2] = B; D[i4 + 3] = 255;
+    }
+    oc5.putImageData(img5, 0, 0);
+    ctx.imageSmoothingEnabled = true; ctx.drawImage(off5, 0, 0, w, h);
+  } else {
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "#F3F6F9"; ctx.fillRect(gx0 * sc, 0, w - gx0 * sc, h);
+    // 入射波峰：x·cosθ₁ + y·sinθ₁ = (T − 2πm)/k₁
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, gx0 * sc, h); ctx.clip();
+    ctx.strokeStyle = "#1E88E5"; ctx.lineWidth = 2;
+    const cmin = Math.min(0, gh * s1), cmax = gx0 * c1 + gh * s1;
+    for (let m = Math.floor((T - k1 * cmax) / TAU) - 1; m <= Math.ceil((T - k1 * cmin) / TAU) + 1; m++) {
+      const C = (T - TAU * m) / k1;
+      ctx.beginPath();
+      if (c1 > 1e-6) { ctx.moveTo((C - 0 * s1) / c1 * sc, 0); ctx.lineTo((C - gh * s1) / c1 * sc, h); }
+      ctx.stroke();
+    }
+    ctx.restore();
+    // 小波：每個偶極的波峰圓弧 r = (T − φj − 2πm)/k₂
+    ctx.save(); ctx.beginPath(); ctx.rect(gx0 * sc, 0, w, h); ctx.clip();
+    ctx.strokeStyle = "rgba(239,108,0,.55)"; ctx.lineWidth = 1.3;
+    const ns = 9, rmax = Math.hypot(gw - gx0, gh);
+    for (let i = 0; i < ns; i++) {
+      const ys = gh * (i + 0.5) / ns, ph = k1 * (gx0 * c1 + ys * s1);
+      for (let m = Math.floor((T - ph - k2 * rmax) / TAU); m <= Math.floor((T - ph) / TAU); m++) {
+        const r = (T - ph - TAU * m) / k2;
+        if (r <= 0 || r > rmax) continue;
+        ctx.beginPath(); ctx.arc(gx0 * sc, ys * sc, r * sc, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+      }
+    }
+    // 包絡線（折射波前）：k₂cosθ₂(x−gx0) + k₁sinθ₁·y = T − 2πm − k₁·gx0·cosθ₁
+    ctx.setLineDash([6, 4]); ctx.strokeStyle = "#2E7D32"; ctx.lineWidth = 2;
+    const off = k1 * gx0 * c1, kx = k2 * c2, ky = k1 * s1, W = gw - gx0;
+    const pmin = Math.min(0, ky * gh), pmax = kx * W + ky * gh;
+    for (let m = Math.floor((T - off - pmax) / TAU) - 1; m <= Math.ceil((T - off - pmin) / TAU) + 1; m++) {
+      const C = T - TAU * m - off;
+      ctx.beginPath();
+      ctx.moveTo((gx0 + (C - 0) / kx) * sc, 0);
+      ctx.lineTo((gx0 + (C - ky * gh) / kx) * sc, h);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  // 邊界與偶極
+  ctx.strokeStyle = "#263238"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(gx0 * sc, 0); ctx.lineTo(gx0 * sc, h); ctx.stroke();
+  for (let y = 4; y < gh; y += 8) {
+    const v = Math.cos(T - k1 * (gx0 * c1 + y * s1));
+    const [R, G, B] = cmap(v);
+    ctx.fillStyle = `rgb(${R|0},${G|0},${B|0})`; ctx.strokeStyle = "#263238"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(gx0 * sc, y * sc, 4, 0, TAU); ctx.fill(); ctx.stroke();
+  }
+  // 法線與光線（通過邊界中點）
+  const Px = gx0 * sc, Py = gh / 2 * sc;
+  ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = "#546E7A"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(Px - 60 * sc, Py); ctx.lineTo(Px + 60 * sc, Py); ctx.stroke(); ctx.restore();
+  const tin = Math.min(gx0 / Math.max(c1, 1e-6), s1 > 1e-6 ? (gh / 2) / s1 : 1e9) * sc * 0.95;
+  arrow(ctx, Px - tin * c1, Py - tin * s1, Px, Py, "#8E24AA", 3);
+  const tout = Math.min((gw - gx0) / Math.max(c2, 1e-6), s2 > 1e-6 ? (gh / 2) / s2 : 1e9) * sc * 0.9;
+  arrow(ctx, Px, Py, Px + tout * c2, Py + tout * s2, "#8E24AA", 3);
+  text(ctx, "空氣 n = 1", 8, 14, "#263238", 13);
+  text(ctx, `介質 n = ${P5.n.toFixed(2)}`, Px + 8, 14, "#263238", 13);
+  $("#ro5").innerHTML = `θ₁ = ${P5.th1}°　｜　n = ${P5.n.toFixed(2)}　｜　Snell 定律預測 θ₂ = <b>${(th2 / DEG).toFixed(1)}°</b>　｜　介質中波長 = 空氣中的 ${(1 / P5.n).toFixed(2)} 倍<br>` +
+    (P5.mode === "heat" ? "右半邊的條紋是把邊界上所有偶極的二次波<b>加總算出來</b>的，不是先畫好的。看它是不是沿著紫色光線走。" : "橘色圓弧＝各偶極小波的波峰；綠色虛線＝它們的共同包絡線＝折射波前。");
+}
+
+/* =====================================================================
+   第 6 階：色散（單一共振 Sellmeier 模型）＋三稜鏡光線追跡
+   ===================================================================== */
+const P6 = { lam0: 100 }, B6 = 1.2727;
+const nOf = (lam) => Math.sqrt(1 + B6 * lam * lam / (lam * lam - P6.lam0 * P6.lam0));
+function lamRGB(l) {
+  let r = 0, g = 0, b = 0;
+  if (l < 440) { r = (440 - l) / 60; b = 1; } else if (l < 490) { g = (l - 440) / 50; b = 1; }
+  else if (l < 510) { g = 1; b = (510 - l) / 20; } else if (l < 580) { r = (l - 510) / 70; g = 1; }
+  else if (l < 645) { r = 1; g = (645 - l) / 65; } else { r = 1; }
+  const f = l < 420 ? 0.4 + 0.6 * (l - 380) / 40 : l > 700 ? 0.4 + 0.6 * (750 - l) / 50 : 1;
+  return `rgb(${Math.round(255 * r * f)},${Math.round(255 * g * f)},${Math.round(255 * b * f)})`;
+}
+/* 向量折射：d 入射方向（單位），nn 指向入射側的法線（單位） */
+function refract(d, nn, n1, n2) {
+  const cosi = -(d[0] * nn[0] + d[1] * nn[1]), eta = n1 / n2, k = 1 - eta * eta * (1 - cosi * cosi);
+  if (k < 0) return null;
+  const f = eta * cosi - Math.sqrt(k);
+  return [eta * d[0] + f * nn[0], eta * d[1] + f * nn[1]];
+}
+function hitSeg(p, d, a, b) {   // 射線 p + t·d 與線段 ab 的交點
+  const ex = b[0] - a[0], ey = b[1] - a[1], den = d[0] * ey - d[1] * ex;
+  if (Math.abs(den) < 1e-12) return null;
+  const t = ((a[0] - p[0]) * ey - (a[1] - p[1]) * ex) / den;
+  const u = ((a[0] - p[0]) * d[1] - (a[1] - p[1]) * d[0]) / den;
+  return t > 1e-9 && u >= 0 && u <= 1 ? [p[0] + t * d[0], p[1] + t * d[1]] : null;
+}
+function draw6() {
+  // 左：n–λ 曲線
+  const ca = fit("cv6a", 0.7, 220); if (!ca) return;
+  let { ctx, w, h } = ca;
+  ctx.clearRect(0, 0, w, h);
+  const l1 = 380, l2 = 750, nA = nOf(l1), nB = nOf(l2);
+  const nlo = Math.min(nA, nB) - 0.01, nhi = Math.max(nA, nB) + 0.01;
+  const ml = 46, mb = 30, mt = 10, mr = 10;
+  const X = (l) => ml + (l - l1) / (l2 - l1) * (w - ml - mr);
+  const Y = (n) => h - mb - (n - nlo) / (nhi - nlo) * (h - mb - mt);
+  ctx.strokeStyle = "#90A4AE"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(ml, mt); ctx.lineTo(ml, h - mb); ctx.lineTo(w - mr, h - mb); ctx.stroke();
+  for (let l = 400; l <= 750; l += 50) text(ctx, String(l), X(l), h - mb + 12, "#607D8B", 11, "center");
+  text(ctx, "波長 (nm)", w - mr, h - 6, "#607D8B", 11, "right");
+  for (let i = 0; i <= 4; i++) { const n = nlo + (nhi - nlo) * i / 4; text(ctx, n.toFixed(3), ml - 4, Y(n), "#607D8B", 11, "right"); }
+  for (let l = l1; l < l2; l += 3) {
+    ctx.strokeStyle = lamRGB(l); ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(X(l), Y(nOf(l))); ctx.lineTo(X(l + 3), Y(nOf(l + 3))); ctx.stroke();
+  }
+  // 右：三稜鏡
+  const cb = fit("cv6b", 0.7, 220); if (!cb) return;
+  ({ ctx, w, h } = cb);
+  ctx.clearRect(0, 0, w, h);
+  const s = Math.min(w * 0.42, h * 0.8), Hh = s * Math.sqrt(3) / 2;
+  const cx = w * 0.42, cy = h * 0.55;
+  const A = [cx, cy - Hh * 2 / 3], Bv = [cx - s / 2, cy + Hh / 3], Cv = [cx + s / 2, cy + Hh / 3];
+  ctx.fillStyle = "rgba(144,202,249,.25)"; ctx.strokeStyle = "#1565C0"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(...A); ctx.lineTo(...Bv); ctx.lineTo(...Cv); ctx.closePath(); ctx.fill(); ctx.stroke();
+  const nL = [-Math.sqrt(3) / 2, -0.5], nR = [Math.sqrt(3) / 2, -0.5];   // 左、右面的外法線
+  // 入射角固定為 n=1.52 的最小偏向角入射（約 49.5°）
+  const thi = Math.asin(1.52 * Math.sin(30 * DEG));
+  const ang = 30 * DEG - thi, d0 = [Math.cos(ang), Math.sin(ang)];
+  const H1 = [(A[0] + Bv[0]) / 2, (A[1] + Bv[1]) / 2];
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(H1[0] - d0[0] * w, H1[1] - d0[1] * w); ctx.lineTo(...H1); ctx.stroke();
+  ctx.strokeStyle = "#424242"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(H1[0] - d0[0] * w, H1[1] - d0[1] * w); ctx.lineTo(...H1); ctx.stroke();
+  text(ctx, "白光", 6, H1[1] - d0[1] * (H1[0] - 6) / d0[0] - 12, "#424242", 12);
+  const rows = [];
+  for (const l of [400, 450, 500, 550, 600, 650, 700]) {
+    const n = nOf(l), t1 = refract(d0, nL, 1, n);
+    if (!t1) continue;
+    const H2 = hitSeg(H1, t1, A, Cv); if (!H2) continue;
+    const t2 = refract(t1, [-nR[0], -nR[1]], n, 1);
+    ctx.strokeStyle = lamRGB(l); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(...H1); ctx.lineTo(...H2); ctx.stroke();
+    if (!t2) { rows.push(`${l} nm 全反射`); continue; }
+    ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(...H2); ctx.lineTo(H2[0] + t2[0] * w, H2[1] + t2[1] * w); ctx.stroke();
+    const dev = (Math.atan2(t2[1], t2[0]) - ang) / DEG;
+    rows.push({ l, n, dev });
+  }
+  const r4 = rows.find((r) => r.l === 400), r7 = rows.find((r) => r.l === 700);
+  P6.lam0 = +$("#l6").value;
+  $("#ro6").innerHTML = `n(400 nm 紫) = ${nOf(400).toFixed(4)}　｜　n(700 nm 紅) = ${nOf(700).toFixed(4)}　｜　差 ${(nOf(400) - nOf(700)).toFixed(4)}<br>` +
+    (r4 && r7 && r4.dev !== undefined && r7.dev !== undefined
+      ? `三稜鏡偏向角：紫 ${r4.dev.toFixed(2)}°、紅 ${r7.dev.toFixed(2)}°，紫光多偏 <b>${(r4.dev - r7.dev).toFixed(2)}°</b>`
+      : "部分色光在第二面發生全反射");
+}
+
+/* =====================================================================
+   第 7 階：一維 FDTD（把空間切成小格子，一步步算電磁場）＋ Lorentz 電子
+   自然單位 c = ε0 = μ0 = 1。介質格子內：
+     d²P/dt² + γ·dP/dt + ω0²·P = ωp²·E      （彈簧上的電子）
+     dE/dt = −dH/dx − dP/dt，dH/dt = −dE/dx   （馬克士威）
+   程式完全不使用 n；n 只出現在讀數的「理論值」。
+   ===================================================================== */
+const G7 = { N: 1000, s0: 350, s1: 850, xs: 50, dt: 0.5, lam: 40 };
+G7.w = TAU / G7.lam; G7.w0 = 3 * G7.w; G7.wp = Math.sqrt(10) * G7.w;   // 讓 n(ω) = 1.50
+const P7 = { mode: "pulse", g: 0, spf: 4 };
+let S7v = null, S7m = null, M7 = {};
+function make7(withMedium) {
+  const N = G7.N;
+  return { E: new Float64Array(N), H: new Float64Array(N), P: new Float64Array(N), Pold: new Float64Array(N),
+           med: withMedium, t: 0, heat: 0 };
+}
+function src7(t) {
+  if (P7.mode === "pulse") { const u = (t - 250) / 60; return 0.5 * Math.exp(-u * u) * Math.sin(G7.w * t); }
+  return 0.5 * Math.min(1, t / 80) * Math.sin(G7.w * t);
+}
+function step7(s) {
+  const { N, s0, s1, dt, w0, wp, xs } = G7, wp2 = wp * wp, g = P7.g, { E, H, P, Pold } = s;
+  for (let i = 0; i < N - 1; i++) H[i] -= dt * (E[i + 1] - E[i]);
+  const c = (dt - 1) / (dt + 1), e1 = E[1], eN = E[N - 2], o0 = E[0], oN = E[N - 1];
+  for (let i = 1; i < N - 1; i++) {
+    if (s.med && i >= s0 && i < s1) {
+      const Pn = ((2 - w0 * w0 * dt * dt) * P[i] - (1 - g * dt / 2) * Pold[i] + wp2 * dt * dt * E[i]) / (1 + g * dt / 2);
+      const J = (Pn - Pold[i]) / (2 * dt);
+      s.heat += g * J * J / wp2 * dt;
+      const dP = Pn - P[i];
+      Pold[i] = P[i]; P[i] = Pn;
+      E[i] += -dt * (H[i] - H[i - 1]) - dP;
+    } else E[i] += -dt * (H[i] - H[i - 1]);
+  }
+  E[xs] += src7(s.t);
+  E[0] = e1 + c * (E[1] - o0); E[N - 1] = eN + c * (E[N - 2] - oN);   // 兩端吸收邊界
+  s.t += dt;
+}
+function reset7() { S7v = make7(false); S7m = make7(true); M7 = {}; }
+/* 能量密度最集中的位置（用 41 格移動平均找最大值） */
+function peak7(s, a, b) {
+  const { E, H, P, Pold } = s, dt = G7.dt, w0 = G7.w0, wp2 = G7.wp * G7.wp;
+  const u = (i) => {
+    let v = 0.5 * (E[i] * E[i] + H[i] * H[i]);
+    if (s.med && i >= G7.s0 && i < G7.s1) { const J = (P[i] - Pold[i]) / dt; v += (J * J + w0 * w0 * P[i] * P[i]) / (2 * wp2); }
+    return v;
+  };
+  let sum = 0, best = -1, at = -1;
+  for (let i = a - 20; i <= a + 20; i++) sum += u(i);
+  for (let i = a; i < b; i++) {
+    if (sum > best) { best = sum; at = i; }
+    sum += u(i + 21) - u(i - 20);
+  }
+  return { at, best };
+}
+function energy7(s) {
+  const { E, H, P, Pold } = s, dt = G7.dt, w0 = G7.w0, wp2 = G7.wp * G7.wp;
+  let fin = 0, mech = 0, fout = 0;
+  for (let i = 0; i < G7.N; i++) {
+    const f = 0.5 * (E[i] * E[i] + H[i] * H[i]);
+    if (i >= G7.s0 && i < G7.s1) {
+      fin += f;
+      if (s.med) { const J = (P[i] - Pold[i]) / dt; mech += (J * J + w0 * w0 * P[i] * P[i]) / (2 * wp2); }
+    } else fout += f;
+  }
+  return { fin, mech, fout };
+}
+function draw7() {
+  const c = fit("cv7", 0.56, 300); if (!c) return;
+  const { ctx, w, h } = c;
+  if (!S7v) reset7();
+  if (!paused) {
+    for (let k = 0; k < P7.spf; k++) { step7(S7v); step7(S7m); }
+    if (P7.mode === "pulse" && S7m.t > 1800) reset7();
+  }
+  const { N, s0, s1 } = G7;
+  const barW = Math.min(120, w * 0.2), pw = w - barW - 12;
+  const X = (i) => i / (N - 1) * pw;
+  const rowH = h / 2, amp = rowH * 0.62;
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = "#ECEFF1"; ctx.fillRect(X(s0), rowH, X(s1) - X(s0), rowH);
+  ctx.strokeStyle = "#CFD8DC"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, rowH); ctx.lineTo(pw, rowH); ctx.stroke();
+  text(ctx, "只有真空（對照）", 8, 14, "#1E88E5", 13);
+  text(ctx, "穿過介質（灰色區域）", 8, rowH + 14, "#2E7D32", 13);
+  // 介質入口、出口的參考線
+  ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = "#B0BEC5";
+  for (const i of [s0, s1]) { ctx.beginPath(); ctx.moveTo(X(i), 4); ctx.lineTo(X(i), h - 4); ctx.stroke(); }
+  ctx.restore();
+  const wave = (s, y0, arr, col, lwid, a, b, scale) => {
+    ctx.strokeStyle = col; ctx.lineWidth = lwid; ctx.beginPath();
+    for (let i = a; i < b; i++) { const x = X(i), y = y0 - amp * scale * arr[i]; i === a ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+    ctx.stroke();
+  };
+  wave(S7v, rowH * 0.58, S7v.E, "#1E88E5", 2, 0, N, 1.2);
+  wave(S7m, rowH * 1.58, S7m.P, "rgba(216,67,21,.75)", 1.5, s0, s1, 1.2 * 0.6);
+  wave(S7m, rowH * 1.58, S7m.E, "#1E88E5", 2, 0, N, 1.2);
+  // 脈衝能量峰值標記與速度量測
+  if (P7.mode === "pulse") {
+    const pv = peak7(S7v, 30, N - 30), pm = peak7(S7m, s0 + 25, N - 30);
+    const mark = (at, y) => { const x = X(at); ctx.fillStyle = "#2E7D32"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 6, y - 10); ctx.lineTo(x + 6, y - 10); ctx.closePath(); ctx.fill(); };
+    if (pv.best > 1e-3) mark(pv.at, rowH * 0.58 - amp * 0.68);
+    if (pm.best > 1e-3) mark(pm.at, rowH * 1.58 - amp * 0.68);
+    const a = s0 + 80, b = s1 - 80;
+    if (pv.best > 1e-3) { if (M7.va === undefined && pv.at >= a) M7.va = S7v.t; if (M7.vb === undefined && pv.at >= b) M7.vb = S7v.t; }
+    if (pm.best > 1e-3) { if (M7.ma === undefined && pm.at >= a) M7.ma = S7m.t; if (M7.mb === undefined && pm.at >= b) M7.mb = S7m.t; }
+  }
+  // 能量條（只算介質區域內）
+  const en = energy7(S7m), tot = en.fin + en.mech + S7m.heat;
+  const bx = pw + 16, by = 22, bh = h - 60;
+  text(ctx, "介質裡的能量", bx + barW / 2 - 6, 10, "#37474F", 12, "center");
+  ctx.strokeStyle = "#90A4AE"; ctx.strokeRect(bx, by, barW - 16, bh);
+  if (tot > 1e-4) {
+    let y = by + bh;
+    for (const [v, col] of [[en.fin, "#1E88E5"], [en.mech, "#D84315"], [S7m.heat, "#9E9E9E"]]) {
+      const hh = bh * v / tot; ctx.fillStyle = col; ctx.fillRect(bx + 1, y - hh, barW - 18, hh); y -= hh;
+    }
+  }
+  text(ctx, "■ 電場", bx, h - 32, "#1E88E5", 11);
+  text(ctx, "■ 電子晃動", bx, h - 19, "#D84315", 11);
+  text(ctx, "■ 變成熱", bx, h - 6, "#9E9E9E", 11);
+  // 讀數
+  const { w: om, w0, wp } = G7;
+  const n = Math.sqrt(1 + wp * wp / (w0 * w0 - om * om));
+  const ng = n + om * om * wp * wp / (n * (w0 * w0 - om * om) ** 2);
+  const inMed = en.fin + en.mech;
+  let s = `理論：相速度 c/${n.toFixed(2)}，群速度 c/${ng.toFixed(2)}　｜　`;
+  if (P7.mode === "pulse") {
+    const L = (s1 - 80) - (s0 + 80);
+    const vv = M7.vb !== undefined ? (L / (M7.vb - M7.va)) : null, vm = M7.mb !== undefined ? (L / (M7.mb - M7.ma)) : null;
+    s += `量到的脈衝速度：真空 ${vv ? vv.toFixed(2) + " c" : "量測中…"}、介質 ${vm ? vm.toFixed(2) + " c（= c/" + (1 / vm).toFixed(2) + "）" : "量測中…"}`;
+  } else {
+    s += `看下排：介質裡的波峰間距較短（波長約為真空的 ${(1 / n).toFixed(2)} 倍）`;
+  }
+  if (inMed > 0.05) s += `<br>此刻介質裡的能量，有 <b>${(100 * en.mech / inMed).toFixed(0)}%</b> 暫存在電子的晃動裡`;
+  if (S7m.heat > 0.01 && tot > 0) s += `；已有 ${(100 * S7m.heat / (inMed + S7m.heat + en.fout)).toFixed(0)}% 的能量變成熱`;
+  $("#ro7").innerHTML = s;
+}
+
+/* =====================================================================
+   POE 預測卡
+   ===================================================================== */
+const PREDICT = {
+  t1: { q: "光的電場推著電子來回晃。如果光的頻率慢慢調高，超過電子自己最順的晃動節奏（共振頻率）以後，電子會怎麼晃？",
+        opts: ["還是跟著電場同步晃，只是晃得小一點", "一路越晃越大", "變成跟電場「反著」晃", "完全停住不動"] },
+  t2: { q: "一個偶極如果「一直來回晃」，而不是靜止不動，它周圍會多出什麼？",
+        opts: ["什麼都不會多，只是電場方向一直換", "會往外發射電磁波（像天線）", "會把附近的電場全部抵消", "會吸住周圍的電子"] },
+  t3: { q: "一道光通過一層原子。原子發出的二次波比原來的光「慢 1/4 拍」。兩者加起來後，在原子層後方測到的光會怎樣？",
+        opts: ["振幅變小，其他不變", "波峰往後退一點（被延遲）", "波峰往前跑一點（超前）", "完全被抵消，變成沒有光"] },
+  t4: { q: "光在介質裡「變慢」了。在兩個原子之間的空隙裡，電磁場本身前進的速度是？",
+        opts: ["光速 c", "c/n", "0，光被原子吸住了", "比 c 更快"] },
+  t5: { q: "光斜斜打進玻璃。如果玻璃的折射率 n 剛好等於 1（跟空氣一樣），邊界上的偶極還是會依序被推動，光會轉彎嗎？",
+        opts: ["會，因為邊界上的偶極是依序被推的", "不會，因為介質中的波長沒有改變", "會，而且轉得更多", "光會完全被反射"] },
+  t6: { q: "玻璃中電子的共振頻率在紫外光。紅光和紫光誰的折射率比較大？",
+        opts: ["紅光", "紫光", "一樣大", "要看入射角"] },
+  t7: { q: "一個光脈衝射進玻璃。在原子之間的空隙，電場還是用光速 c 傳。那整個脈衝（帶著能量）穿過玻璃的速度會是？",
+        opts: ["也是 c，因為電場用 c 傳", "比 c 慢", "比 c 快", "會先停住，等電子把能量放出來才繼續"] },
+};
+const STORE_KEY = "dipole-refraction-v1";
+const loadProgress = () => { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; } };
+const saveProgress = (o) => { try { localStorage.setItem(STORE_KEY, JSON.stringify(o)); } catch {} };
+function resetProgress() { try { localStorage.removeItem(STORE_KEY); } catch {} location.reload(); }
+
+function renderPredict(key) {
+  const box = document.querySelector(`.predict[data-p="${key}"]`), P = PREDICT[key];
+  const picked = loadProgress()[key];
+  box.innerHTML = `<h3>🤔 先預測</h3><div>${P.q}</div><div class="opts">${P.opts.map((o, i) =>
+    `<button data-i="${i}" class="${picked === i ? "picked" : ""}">(${"ABCD"[i]}) ${o}</button>`).join("")}</div>
+    <div class="msg">${picked !== undefined ? `你預測的是 (${"ABCD"[picked]})。現在動手試試看，再打開「看解釋」對照。` : ""}</div>`;
+  box.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    const pr = loadProgress(); pr[key] = +b.dataset.i; saveProgress(pr); renderPredict(key);
+  }));
+  const sim = document.getElementById("sim-" + key);
+  sim.classList.toggle("locked", picked === undefined);
+}
+
+/* =====================================================================
+   控制項綁定
+   ===================================================================== */
+function bindRange(id, fmt, set) {
+  const el = document.getElementById(id), out = document.getElementById(id + "o");
+  const upd = () => { set(+el.value); out.textContent = fmt(+el.value); };
+  el.addEventListener("input", upd); upd();
+}
+function bindSeg(id, set) {
+  const seg = document.getElementById(id);
+  seg.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    seg.querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+    b.classList.add("on"); set(b.dataset.v);
+  }));
+}
+bindRange("r1", (v) => v.toFixed(2), (v) => (P1.r = v));
+bindSeg("seg2", (v) => (P2.mode = v));
+bindRange("a3", (v) => v.toFixed(2), (v) => (P3.a = v));
+bindSeg("seg3", (v) => (P3.mode = v));
+$("#back3").addEventListener("change", (e) => (P3.back = e.target.checked));
+bindRange("a4", (v) => v.toFixed(2), (v) => (P4.a = v));
+bindRange("n4", (v) => String(v), (v) => (P4.N = v));
+bindSeg("seg4", (v) => (P4.mode = v));
+bindRange("th5", (v) => v + "°", (v) => { P5.th1 = v; dirty5 = true; });
+bindRange("n5", (v) => v.toFixed(2), (v) => { P5.n = v; dirty5 = true; });
+bindSeg("seg5", (v) => (P5.mode = v));
+bindRange("l6", (v) => v + " nm", (v) => (P6.lam0 = v));
+bindRange("g7", (v) => v.toFixed(3), (v) => (P7.g = v));
+bindRange("sp7", (v) => v + "×", (v) => (P7.spf = v));
+bindSeg("seg7", (v) => { P7.mode = v; reset7(); });
+$("#re7").addEventListener("click", reset7);
+
+document.querySelectorAll(".pausebtn").forEach((b) => b.addEventListener("click", () => {
+  paused = !paused;
+  document.querySelectorAll(".pausebtn").forEach((x) => (x.textContent = paused ? "▶ 繼續" : "⏸ 暫停"));
+}));
+
+/* ====== 分頁切換 ====== */
+function go(tab) {
+  active = tab;
+  document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("active", x.dataset.tab === tab));
+  document.querySelectorAll(".panel").forEach((x) => x.classList.toggle("active", x.id === "panel-" + tab));
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => go(b.dataset.tab)));
+document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
+
+/* =====================================================================
+   題庫＋出卷列印
+   ===================================================================== */
+const QUESTIONS = [
+  { stem: "玻璃中的電子被可見光的電場推動時，最接近下列哪一種情況？",
+    options: ["被推到一邊後就停在那裡", "像彈簧上的球被週期性地推，跟著光的頻率來回晃", "脫離原子，變成自由電子", "完全不受影響"], ans: 1 },
+  { stem: "一個一直來回晃動的偶極，會對周圍造成什麼影響？",
+    options: ["只產生一個固定的反向電場", "發射和晃動頻率相同的電磁波", "把附近的光全部吸收", "產生磁鐵般的固定磁場"], ans: 1 },
+  { stem: "從微觀來看，光在玻璃中「看起來變慢」的主要原因是？",
+    options: ["光子被原子吸收後停一下再放出", "玻璃太擠，光要繞路", "原本的光和原子發出的二次波疊加，波峰被一層層往後拖", "電子產生的反向電場把光擋慢"], ans: 2 },
+  { stem: "在玻璃中，兩個原子之間的空隙裡，電磁場前進的速率是？",
+    options: ["c", "c/n", "0", "nc"], ans: 0 },
+  { stem: "（思考實驗）如果原子發出的二次波和原本的光完全同步，兩者相加後會怎樣？",
+    options: ["波峰往後退", "波峰往前跑", "只是振幅改變，波峰位置不變", "光完全消失"], ans: 2 },
+  { stem: "光斜射進入玻璃時會偏向法線，下列哪一個說法最完整？",
+    options: ["光選擇了最省力的路", "邊界上的偶極被依序驅動，且介質中波長變短，小波的包絡面因此轉向", "玻璃的反向電場把光推彎", "光在邊界被吸收後換一個方向放出"], ans: 1 },
+  { stem: "玻璃對紫光的折射率比紅光大，原因是？",
+    options: ["紫光能量大，比較重", "紫光頻率較接近電子的紫外共振頻率，電子回應較大", "紅光波長長，比較容易穿過原子", "紫光速度本來就比較慢"], ans: 1 },
+  { stem: "X 光在玻璃中的折射率略小於 1。依本網頁的模型，原因是？",
+    options: ["X 光頻率遠高於電子共振頻率，電子反相晃動，二次波使波峰超前", "X 光不會和電子作用", "X 光在玻璃中真的比光速快，傳遞訊息也比較快", "X 光被玻璃反射"], ans: 0 },
+  { stem: "光脈衝在玻璃中的能量傳遞速度比 c 慢，最主要的原因是？",
+    options: ["一部分能量隨時暫存在跟著光同步晃動的電子上，電子每一拍都在收能量也在還能量", "電子吸收一份能量後，隔一段時間才往隨機方向放出", "能量一路變成熱，光越走越沒力", "玻璃的反向電場把光擋住"], ans: 0 },
+  { stem: "把電子晃動的摩擦（轉成熱的機制）完全去掉，光在玻璃中會？",
+    options: ["恢復成光速 c", "照樣變慢，只是不會越走越弱", "完全被吸收", "變成往隨機方向散射"], ans: 1 },
+];
+let quizOrder = QUESTIONS.map((_, i) => i);
+function renderQuiz() {
+  $("#quiz-area").innerHTML = quizOrder.map((qi, n) => {
+    const q = QUESTIONS[qi];
+    return `<div class="q" data-qi="${qi}"><div class="stem">${n + 1}. ${q.stem}</div>
+      ${q.options.map((op, oi) => `<label><input type="radio" name="q${n}" value="${oi}"> (${"ABCD"[oi]}) ${op}</label>`).join("")}</div>`;
+  }).join("");
+}
+function gradeQuiz() {
+  document.querySelectorAll(".q").forEach((div) => {
+    const q = QUESTIONS[+div.dataset.qi], picked = div.querySelector("input:checked");
+    div.classList.remove("correct", "wrong");
+    if (picked) div.classList.add(+picked.value === q.ans ? "correct" : "wrong");
+  });
+}
+function shuffleQuiz() {
+  for (let i = quizOrder.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [quizOrder[i], quizOrder[j]] = [quizOrder[j], quizOrder[i]];
+  }
+  renderQuiz();
+}
+
+/* =====================================================================
+   動畫主迴圈
+   ===================================================================== */
+const DRAW = { t1: draw1, t2: draw2, t3: draw3, t4: draw4, t5: draw5, t6: draw6, t7: draw7 };
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (!paused) T += dt * Math.PI;   // 每 2 秒一個週期
+  const f = DRAW[active];
+  if (f) { try { f(); } catch (e) { console.error(e); } }
+  requestAnimationFrame(loop);
+}
+Object.keys(PREDICT).forEach(renderPredict);
+renderQuiz();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
